@@ -59,16 +59,63 @@ def generate_output_filenames(input_filename: str) -> Tuple[str, str]:
     return prg_fname, chr_fname
 
 
-def extract_rom_data(file_name: str, nes_file: BinaryIO) -> None:
+def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool) -> bool:
+    """
+    Check if output files exist and get user permission to overwrite.
+    
+    Args:
+        prg_fname: PRG output filename
+        chr_fname: CHR output filename
+        force: If True, skip confirmation and allow overwrite
+        
+    Returns:
+        True if overwrite is allowed, False otherwise
+    """
+    prg_exists = Path(prg_fname).exists()
+    chr_exists = Path(chr_fname).exists()
+    
+    if not (prg_exists or chr_exists):
+        return True  # No files to overwrite
+    
+    if force:
+        return True  # Force overwrite
+    
+    # Check if we're in an interactive terminal
+    if not sys.stdin.isatty():
+        # Not interactive, print error and exit
+        existing_files = []
+        if prg_exists:
+            existing_files.append(prg_fname)
+        if chr_exists:
+            existing_files.append(chr_fname)
+        print(f"Error: Output files already exist: {', '.join(existing_files)}", file=sys.stderr)
+        print("Use --force to overwrite existing files", file=sys.stderr)
+        return False
+    
+    # Interactive mode - ask for confirmation
+    existing_files = []
+    if prg_exists:
+        existing_files.append(prg_fname)
+    if chr_exists:
+        existing_files.append(chr_fname)
+    
+    print(f"Warning: Output files already exist: {', '.join(existing_files)}", file=sys.stderr)
+    response = input("Overwrite existing files? [y/N]: ").strip().lower()
+    
+    return response in ('y', 'yes')
+
+
+def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) -> None:
     """
     Extract PRG and CHR ROM data from an iNES file.
     
     Args:
         file_name: Name of the ROM file (for output naming)
         nes_file: File-like object containing the ROM data
+        force: If True, overwrite existing files without confirmation
         
     Raises:
-        ROMExtractionError: If extraction fails
+        ROMExtractionError: If extraction fails or overwrite denied
     """
     # Parse header
     header_data = nes_file.read(INES_HEADER_SIZE)
@@ -81,6 +128,10 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO) -> None:
     
     # Generate output filenames
     prg_fname, chr_fname = generate_output_filenames(file_name)
+    
+    # Check if files exist and get permission to overwrite
+    if not check_overwrite_permission(prg_fname, chr_fname, force):
+        raise ROMExtractionError("Overwrite cancelled by user")
     
     # Calculate expected file size from header
     trainer_size = INES_TRAINER_SIZE if header.has_trainer else 0
@@ -119,12 +170,13 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO) -> None:
         )
 
 
-def process_archive(filename: str) -> None:
+def process_archive(filename: str, force: bool = False) -> None:
     """
     Process an archive (.7z, .zip, or .rar) and extract the first .nes ROM file.
     
     Args:
         filename: Path to the archive
+        force: If True, overwrite existing files without confirmation
         
     Raises:
         ROMExtractionError: If processing fails or libarchive not available
@@ -168,19 +220,20 @@ def process_archive(filename: str) -> None:
                         
                         # Create BytesIO object and extract
                         bio = io.BytesIO(data)
-                        extract_rom_data(entry.name, bio)
+                        extract_rom_data(entry.name, bio, force)
                         return
 
 
-def process_nes_file(filename: str) -> None:
+def process_nes_file(filename: str, force: bool = False) -> None:
     """
     Process a plain .nes file.
     
     Args:
         filename: Path to the .nes file
+        force: If True, overwrite existing files without confirmation
     """
     with open(filename, "rb") as nes_file:
-        extract_rom_data(filename, nes_file)
+        extract_rom_data(filename, nes_file, force)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -199,6 +252,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         'filename',
         help='Input file (.nes or archive)'
+    )
+    parser.add_argument(
+        '--force',
+        '-f',
+        action='store_true',
+        help='Overwrite existing output files without confirmation'
     )
     return parser.parse_args()
 
@@ -236,9 +295,9 @@ def main() -> int:
                 print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
                 print("For archive format support, install libarchive-c: pip install libarchive-c", file=sys.stderr)
                 return 1
-            process_archive(args.filename)
+            process_archive(args.filename, force=args.force)
         elif file_ext == '.nes':
-            process_nes_file(args.filename)
+            process_nes_file(args.filename, force=args.force)
         else:
             print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
             all_extensions = SUPPORTED_EXTENSIONS | ARCHIVE_EXTENSIONS
