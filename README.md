@@ -119,6 +119,10 @@ Extract PRG and CHR ROM data from iNES files.
 # Extract from archive
 ./scripts/split_rom.py roms.7z
 # Extracts first .nes file from archive
+
+# Force overwrite existing files
+./scripts/split_rom.py game.nes --force
+# Overwrites game.prg.bin and game.chr.bin without confirmation
 ```
 
 **Features:**
@@ -127,6 +131,7 @@ Extract PRG and CHR ROM data from iNES files.
 - Generates clean PRG and CHR binary files
 - Validates ROM structure and reports errors
 - Warns when archives contain multiple ROM files
+- **Protects existing files**: Prompts for confirmation before overwriting (use `--force` to skip)
 
 **Output:**
 
@@ -143,6 +148,19 @@ Warning: Found 7 .nes files in archive:
   - game2.nes
   ...
 Processing only the first file: game1.nes
+```
+
+**File Overwrite Protection:**
+
+By default, if output files already exist, the script will:
+
+- In interactive mode: Prompt for confirmation (`Overwrite existing files? [y/N]:`)
+- In non-interactive mode (pipes/scripts): Exit with error and suggest using `--force`
+
+To skip confirmation, use the `--force` or `-f` flag:
+
+```bash
+./scripts/split_rom.py game.nes --force
 ```
 
 ## File Format Documentation
