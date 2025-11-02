@@ -100,7 +100,12 @@ def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool) -> b
         existing_files.append(chr_fname)
     
     print(f"Warning: Output files already exist: {', '.join(existing_files)}", file=sys.stderr)
-    response = input("Overwrite existing files? [y/N]: ").strip().lower()
+    try:
+        response = input("Overwrite existing files? [y/N]: ").strip().lower()
+    except KeyboardInterrupt:
+        # User pressed Ctrl-C, exit gracefully
+        print(file=sys.stderr)  # New line after ^C
+        sys.exit(130)  # Standard exit code for SIGINT
     
     return response in ('y', 'yes')
 
@@ -307,6 +312,10 @@ def main() -> int:
         
         return 0
         
+    except KeyboardInterrupt:
+        # User pressed Ctrl-C, exit gracefully
+        print(file=sys.stderr)  # New line after ^C
+        return 130  # Standard exit code for SIGINT
     except ROMExtractionError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
