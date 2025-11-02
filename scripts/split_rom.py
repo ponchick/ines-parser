@@ -10,7 +10,7 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Tuple
 
 # Add parent directory to path for ines_parser package import
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -27,10 +27,8 @@ from ines_parser import parse_ines_header, INES_HEADER_SIZE, INES_TRAINER_SIZE
 
 # Constants
 SUPPORTED_EXTENSIONS = {'.nes'}
-if LIBARCHIVE_AVAILABLE:
-    ARCHIVE_EXTENSIONS = {'.7z', '.zip', '.rar'}
-else:
-    ARCHIVE_EXTENSIONS = set()
+ALL_ARCHIVE_EXTENSIONS = {'.7z', '.zip', '.rar'}
+ARCHIVE_EXTENSIONS = ALL_ARCHIVE_EXTENSIONS if LIBARCHIVE_AVAILABLE else set()
 
 
 class ROMExtractionError(Exception):
@@ -38,7 +36,7 @@ class ROMExtractionError(Exception):
     pass
 
 
-def generate_output_filenames(input_filename: str) -> tuple[str, str]:
+def generate_output_filenames(input_filename: str) -> Tuple[str, str]:
     """
     Generate output filenames for PRG and CHR ROM files.
     
@@ -233,10 +231,10 @@ def main() -> int:
     try:
         file_ext = input_path.suffix.lower()
         
-        if file_ext in ARCHIVE_EXTENSIONS:
+        if file_ext in ALL_ARCHIVE_EXTENSIONS:
             if not LIBARCHIVE_AVAILABLE:
-                print(f"Error: Cannot process archive files - libarchive not available", file=sys.stderr)
-                print("Install libarchive-c: pip install libarchive-c", file=sys.stderr)
+                print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
+                print("For archive format support, install libarchive-c: pip install libarchive-c", file=sys.stderr)
                 return 1
             process_archive(args.filename)
         elif file_ext == '.nes':
