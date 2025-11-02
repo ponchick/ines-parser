@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# ROM files and archives (for testing)
+*.nes
+*.7z
+*.zip
+*.rar
+test_archive/
+
+# Extracted ROM data
+*.prg.bin
+*.chr.bin

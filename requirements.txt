@@ -1,0 +1,7 @@
+# Optional dependencies for archive support
+# The core ines_parser.py library works without any dependencies
+# Archive support (.7z, .zip, .rar) requires libarchive-c
+
+# For archive support (optional)
+libarchive-c>=4.0
+

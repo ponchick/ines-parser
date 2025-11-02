@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ines-parser"
+version = "1.0.0"
+description = "A Python library and utilities for parsing iNES format NES ROM files"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Leonid Kabanov"}
+]
+keywords = ["nes", "ines", "rom", "parser", "retro", "gaming", "emulation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Games/Entertainment",
+    "Topic :: System :: Archiving",
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+archive = ["libarchive-c>=4.0"]
+
+[project.urls]
+Homepage = "https://github.com/ponchick/ines-parser"
+Documentation = "https://github.com/ponchick/ines-parser#readme"
+Repository = "https://github.com/ponchick/ines-parser.git"
+Issues = "https://github.com/ponchick/ines-parser/issues"
+Changelog = "https://github.com/ponchick/ines-parser/releases"
+
+[project.scripts]
+ines-scan-roms = "scripts.scan_roms:main"
+ines-split-rom = "scripts.split_rom:main"
+
+[tool.setuptools]
+packages = ["ines_parser"]
+
+[tool.setuptools.package-data]
+ines_parser = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pylint.messages_control]
+max-line-length = 100
+disable = [
+    "missing-module-docstring",
+    "missing-function-docstring",
+]
+
