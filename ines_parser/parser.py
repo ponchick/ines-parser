@@ -487,5 +487,6 @@ def parse_ines_header(header_bytes: bytes) -> Optional[INESHeader]:
     """
     try:
         return INESHeader(header_bytes)
-    except Exception:
+    except (ValueError, TypeError, IndexError):
+        # Treat malformed or incomplete headers as parse failures.
         return None

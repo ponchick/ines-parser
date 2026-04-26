@@ -8,6 +8,7 @@ supporting both plain .nes files and .7z archives.
 
 import argparse
 import io
+import os
 import sys
 from pathlib import Path
 from typing import BinaryIO, Tuple
@@ -59,7 +60,8 @@ def generate_output_filenames(input_filename: str) -> Tuple[str, str]:
     return prg_fname, chr_fname
 
 
-def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool) -> bool:
+def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool,
+                              write_prg: bool = True, write_chr: bool = True) -> bool:
     """
     Check if output files exist and get user permission to overwrite.
     
@@ -67,12 +69,14 @@ def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool) -> b
         prg_fname: PRG output filename
         chr_fname: CHR output filename
         force: If True, skip confirmation and allow overwrite
+        write_prg: If True, PRG output file will be written
+        write_chr: If True, CHR output file will be written
         
     Returns:
         True if overwrite is allowed, False otherwise
     """
-    prg_exists = Path(prg_fname).exists()
-    chr_exists = Path(chr_fname).exists()
+    prg_exists = write_prg and Path(prg_fname).exists()
+    chr_exists = write_chr and Path(chr_fname).exists()
     
     if not (prg_exists or chr_exists):
         return True  # No files to overwrite
@@ -135,7 +139,13 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) ->
     prg_fname, chr_fname = generate_output_filenames(file_name)
     
     # Check if files exist and get permission to overwrite
-    if not check_overwrite_permission(prg_fname, chr_fname, force):
+    if not check_overwrite_permission(
+        prg_fname,
+        chr_fname,
+        force,
+        write_prg=header.prg_rom_size > 0,
+        write_chr=header.chr_rom_size > 0
+    ):
         raise ROMExtractionError("Overwrite cancelled by user")
     
     # Calculate expected file size from header
@@ -167,11 +177,19 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) ->
             chr_file.write(chr_data)
         print(f"Extracted CHR ROM: {chr_fname} ({header.chr_rom_size} bytes)")
     
-    # Verify we've read the expected amount of data
+    # Verify we've read at least the expected amount of data.
+    # Extra trailing data is allowed, but we report it for visibility.
     actual_position = nes_file.tell()
-    if actual_position != expected_file_size:
+    if actual_position < expected_file_size:
         raise ROMExtractionError(
-            f"File size mismatch: expected {expected_file_size} bytes, got {actual_position} bytes"
+            f"File ended early: expected to read {expected_file_size} bytes, read {actual_position} bytes"
+        )
+    extra_data = nes_file.read(1)
+    if extra_data:
+        print(
+            "Warning: Required ROM data was read successfully, "
+            "but file contains additional trailing bytes",
+            file=sys.stderr
         )
 
 
@@ -287,7 +305,7 @@ def main() -> int:
         print(f"Error: Not a file: {args.filename}", file=sys.stderr)
         return 1
     
-    if not input_path.stat().st_mode & 0o400:  # Check read permission
+    if not os.access(input_path, os.R_OK):
         print(f"Error: File is not readable: {args.filename}", file=sys.stderr)
         return 1
     

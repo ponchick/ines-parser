@@ -5,7 +5,7 @@ Provides lookup tables for mapper names and additional information.
 Based on NESdev Wiki mapper list.
 """
 
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 
 # Mapper database: mapper_number -> (primary_name, [alternate_names], notes)
 MAPPER_DATABASE: Dict[int, tuple] = {
@@ -106,7 +106,7 @@ def get_mapper_notes(mapper_number: int) -> str:
     return ""
 
 
-def get_mapper_info(mapper_number: int) -> Dict[str, any]:
+def get_mapper_info(mapper_number: int) -> Dict[str, Any]:
     """
     Get complete mapper information.
     
