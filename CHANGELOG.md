@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-05-03
+
+### Changed
+
+- **`ines_parser.mappers`:** `MAPPER_DATABASE` now covers all mapper numbers listed in MAME’s `nes_ines.hxx` `mmc_list` (plus curated NESdev-style names where they overlap), including many NES 2.0 mapper IDs.
+- **Docs:** `docs/List of iNES mappers.md` is a full table aligned with `MAPPER_DATABASE`, with a **Sources** section (NESdev, MAME).
+
 ## [1.2.0] - 2026-05-02
 
 ### Changed
@@ -32,5 +39,6 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Narrowed exception handling in `parse_ines_header()` to avoid masking unrelated errors.
 - Corrected typing annotation in `mappers.py` from `any` to `Any`.
 
+[1.2.1]: https://github.com/ponchick/ines-parser/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/ponchick/ines-parser/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ponchick/ines-parser/releases/tag/v1.1.0

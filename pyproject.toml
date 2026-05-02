@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ines-parser"
-version = "1.2.0"
+version = "1.2.1"
 description = "A Python library and utilities for parsing iNES format NES ROM files"
 readme = "README.md"
 license = "MIT"
