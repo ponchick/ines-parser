@@ -178,7 +178,7 @@ class INESHeader:
         # Flags 8: PRG RAM size
         self.prg_ram_size_units = header_bytes[8]
         if self.prg_ram_size_units == 0:
-            self.prg_ram_size = 8 * 1024  # 8KB for compatibility
+            self.prg_ram_size = 8 * 1024  # 8 KiB for compatibility
         else:
             self.prg_ram_size = self.prg_ram_size_units * 8 * 1024
         
@@ -344,8 +344,8 @@ class INESHeader:
             'valid': True,
             'prg_rom_size': self.prg_rom_size,
             'chr_rom_size': self.chr_rom_size,
-            'prg_rom_size_kb': self.prg_rom_size // 1024,
-            'chr_rom_size_kb': self.chr_rom_size // 1024,
+            'prg_rom_size_kib': self.prg_rom_size // 1024,
+            'chr_rom_size_kib': self.chr_rom_size // 1024,
             'mapper': self.mapper,
             'mapper_name': mapper_info['name'],
             'mapper_alternates': mapper_info['alternates'],
@@ -406,10 +406,10 @@ class INESHeader:
         # Minimal output: mapper name, PRG size, and CHR size if present
         mapper_name = self.get_mapper_name()
         parts = [f"mapper: {self.mapper} ({mapper_name})"]
-        parts.append(f"PRG: {self.prg_rom_size // 1024}k")
+        parts.append(f"PRG: {self.prg_rom_size // 1024} KiB")
         
         if self.chr_rom_size > 0:
-            parts.append(f"CHR: {self.chr_rom_size // 1024}k")
+            parts.append(f"CHR: {self.chr_rom_size // 1024} KiB")
         
         return ", ".join(parts)
     
@@ -424,8 +424,8 @@ class INESHeader:
         parts = [
             f"mapper: {self.mapper} ({mapper_info['name']})",
             f"mirroring: {self.mirroring.value}",
-            f"PRG ROM: {self.prg_rom_size // 1024}k",
-            f"CHR ROM: {self.chr_rom_size // 1024}k"
+            f"PRG ROM: {self.prg_rom_size // 1024} KiB",
+            f"CHR ROM: {self.chr_rom_size // 1024} KiB"
         ]
         
         # Mapper info
@@ -439,13 +439,13 @@ class INESHeader:
             if self.submapper is not None:
                 parts.append(f"Submapper: {self.submapper}")
             if self.prg_ram_size and self.prg_ram_size > 0:
-                parts.append(f"PRG RAM: {self.prg_ram_size // 1024}k")
+                parts.append(f"PRG RAM: {self.prg_ram_size // 1024} KiB")
             if self.prg_nvram_size and self.prg_nvram_size > 0:
-                parts.append(f"PRG NVRAM: {self.prg_nvram_size // 1024}k")
+                parts.append(f"PRG NVRAM: {self.prg_nvram_size // 1024} KiB")
             if self.chr_ram_size and self.chr_ram_size > 0:
-                parts.append(f"CHR RAM: {self.chr_ram_size // 1024}k")
+                parts.append(f"CHR RAM: {self.chr_ram_size // 1024} KiB")
             if self.chr_nvram_size and self.chr_nvram_size > 0:
-                parts.append(f"CHR NVRAM: {self.chr_nvram_size // 1024}k")
+                parts.append(f"CHR NVRAM: {self.chr_nvram_size // 1024} KiB")
             if self.cpu_timing:
                 parts.append(f"CPU Timing: {self.cpu_timing.value}")
             if self.console_type == ConsoleType.VS_SYSTEM:
