@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ines-parser"
-version = "1.1.0"
+version = "1.2.0"
 description = "A Python library and utilities for parsing iNES format NES ROM files"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Leonid Kabanov"}
 ]
@@ -15,7 +15,6 @@ keywords = ["nes", "ines", "rom", "parser", "retro", "gaming", "emulation"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -38,11 +37,11 @@ Issues = "https://github.com/ponchick/ines-parser/issues"
 Changelog = "https://github.com/ponchick/ines-parser/releases"
 
 [project.scripts]
-ines-scan-roms = "scripts.scan_roms:main"
-ines-split-rom = "scripts.split_rom:main"
+"ines_scan_roms.py" = "ines_parser.cli.ines_scan_roms:main"
+"ines_split_rom.py" = "ines_parser.cli.ines_split_rom:main"
 
 [tool.setuptools]
-packages = ["ines_parser"]
+packages = ["ines_parser", "ines_parser.cli"]
 
 [tool.setuptools.package-data]
 ines_parser = ["py.typed"]

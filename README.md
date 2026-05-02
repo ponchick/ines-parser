@@ -7,12 +7,10 @@ Supported versions: Python 3.10-3.14.
 ## Quick Start
 
 ```bash
-git clone https://github.com/ponchick/ines-parser.git
-cd ines-parser
+pip install ines-parser
 ```
 
-The `ines_parser` core has no external dependencies.  
-Archive support (`.7z/.zip/.rar`) requires `libarchive-c`.
+Optional extra for archive formats (`.7z`/`.zip`/`.rar`): `pip install "ines-parser[archive]"`. Otherwise the library has no extra dependencies.
 
 ## What It Does
 
@@ -22,17 +20,31 @@ Archive support (`.7z/.zip/.rar`) requires `libarchive-c`.
 
 ## CLI
 
-### `scan_roms.py` - scan ROM files
+Tools live in **`ines_parser/cli/`** as **`ines_scan_roms.py`** and **`ines_split_rom.py`**. The names match **`pip install`** entry points on your `PATH`: **`ines_scan_roms.py`** and **`ines_split_rom.py`**.
+
+**Without installing**, from the repository root you can use either `-m` or the path to the same files:
 
 ```bash
-# Basic scan
-./scripts/scan_roms.py /path/to/roms
+python -m ines_parser.cli.ines_scan_roms /path/to/roms
+python ines_parser/cli/ines_scan_roms.py /path/to/roms
 
-# Only mapper 4
-./scripts/scan_roms.py /path/to/roms --mapper 4
+python -m ines_parser.cli.ines_split_rom game.nes
+python ines_parser/cli/ines_split_rom.py game.nes
+```
 
-# Show more fields
-./scripts/scan_roms.py /path/to/roms --show-all
+**After `pip install`,** run the same logical names as commands (they are small wrappers, not copies of the sources):
+
+```bash
+ines_scan_roms.py /path/to/roms
+ines_split_rom.py game.nes
+```
+
+### Scan ROMs
+
+```bash
+ines_scan_roms.py /path/to/roms
+ines_scan_roms.py /path/to/roms --mapper 4
+ines_scan_roms.py /path/to/roms --show-all
 ```
 
 Useful filters:
@@ -40,23 +52,18 @@ Useful filters:
 - `--mapper N`
 - `--mirroring H|V|F`
 - `--has-trainer`
-- `--min-prg KB`, `--max-prg KB`
-- `--min-chr KB`, `--max-chr KB`
+- `--min-prg KiB`, `--max-prg KiB`
+- `--min-chr KiB`, `--max-chr KiB`
 
-### `split_rom.py` - extract PRG/CHR
+### Split ROM (PRG / CHR)
 
 ```bash
-# From a .nes file
-./scripts/split_rom.py game.nes
-
-# From an archive (uses first .nes found)
-./scripts/split_rom.py roms.7z
-
-# Overwrite output files without prompt
-./scripts/split_rom.py game.nes --force
+ines_split_rom.py game.nes
+ines_split_rom.py roms.7z
+ines_split_rom.py game.nes --force
 ```
 
-By default, the script protects existing output files from accidental overwrite.
+By default, existing output files are not overwritten without confirmation.
 
 ## Library Usage
 

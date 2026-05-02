@@ -25,7 +25,7 @@ from .mappers import (
     is_known_mapper,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __author__ = "Leonid Kabanov"
 __all__ = [
     "parse_ines_header",
