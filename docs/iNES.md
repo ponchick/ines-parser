@@ -28,15 +28,15 @@ Some ROM-Images additionally contain a 128-byte (or sometimes 127-byte) title at
 The format of the header is as follows:
 
 | Bytes | Description |
-|-------|-------------|
-| 0-3   | Constant $4E $45 $53 $1A (ASCII "NES" followed by MS-DOS end-of-file) |
-| 4     | Size of PRG ROM in 16 KB units |
-| 5     | Size of CHR ROM in 8 KB units (value 0 means the board uses CHR RAM) |
-| 6     | Flags 6 – Mapper, mirroring, battery, trainer |
-| 7     | Flags 7 – Mapper, VS/Playchoice, NES 2.0 |
-| 8     | Flags 8 – PRG-RAM size (rarely used extension) |
-| 9     | Flags 9 – TV system (rarely used extension) |
-| 10    | Flags 10 – TV system, PRG-RAM presence (unofficial, rarely used extension) |
+| --- | --- |
+| 0-3 | Constant $4E $45 $53 $1A (ASCII "NES" followed by MS-DOS end-of-file) |
+| 4 | Size of PRG ROM in 16 KiB units |
+| 5 | Size of CHR ROM in 8 KiB units (value 0 means the board uses CHR RAM) |
+| 6 | Flags 6 – Mapper, mirroring, battery, trainer |
+| 7 | Flags 7 – Mapper, VS/Playchoice, NES 2.0 |
+| 8 | Flags 8 – PRG-RAM size (rarely used extension) |
+| 9 | Flags 9 – TV system (rarely used extension) |
+| 10 | Flags 10 – TV system, PRG-RAM presence (unofficial, rarely used extension) |
 | 11-15 | Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15) |
 
 ### Flags 6
@@ -106,12 +106,12 @@ It is not used on unmodified dumps of original ROM cartridges.
 76543210
 ||||||||
 |||||||+- VS Unisystem
-||||||+-- PlayChoice-10 (8 KB of Hint Screen data stored after CHR data)
+||||||+-- PlayChoice-10 (8 KiB of Hint Screen data stored after CHR data)
 ||||++--- If equal to 2, flags 8-15 are in NES 2.0 format
 ++++----- Upper nybble of mapper number
 ```
 
-The PlayChoice-10 bit is not part of the official specification, and most emulators simply ignore the extra 8 KB of data. PlayChoice games are designed to look good with the 2C03 RGB PPU, which handles color emphasis differently from a standard NES PPU.
+The PlayChoice-10 bit is not part of the official specification, and most emulators simply ignore the extra 8 KiB of data. PlayChoice games are designed to look good with the 2C03 RGB PPU, which handles color emphasis differently from a standard NES PPU.
 
 Vs. games have a coin slot and different palettes. The detection of which palette a particular game uses is left unspecified.
 
@@ -125,7 +125,7 @@ NES 2.0 is a more recent extension to the format that allows more flexibility in
 ++++++++- PRG RAM size
 ```
 
-Size of PRG RAM in 8 KB units (Value 0 infers 8 KB for compatibility; see PRG RAM circuit)
+Size of PRG RAM in 8 KiB units (Value 0 infers 8 KiB for compatibility; see PRG RAM circuit)
 
 This was a later extension to the iNES format and not widely used. NES 2.0 is recommended for specifying PRG RAM size instead.
 
