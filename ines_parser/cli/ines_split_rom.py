@@ -13,8 +13,8 @@ import sys
 from pathlib import Path
 from typing import BinaryIO, Tuple
 
-# Add parent directory to path for ines_parser package import
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Repo root on path when running this file directly (not via pip console_scripts)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Try to import libarchive - make it optional
 try:
@@ -268,7 +268,7 @@ def parse_arguments() -> argparse.Namespace:
         supported_formats += " (libarchive not available - archive support disabled)"
     
     parser = argparse.ArgumentParser(
-        prog='split_rom.py',
+        prog='ines_split_rom.py',
         description='Split iNES ROM files into PRG and CHR components',
         epilog=f"Supported formats: {supported_formats}"
     )

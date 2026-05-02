@@ -12,8 +12,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-# Add parent directory to path for ines_parser package import
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Repo root on path when running this file directly (not via pip console_scripts)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Try to import libarchive - make it optional
 try:
@@ -37,6 +37,26 @@ else:
     ARCHIVE_EXTENSIONS = set()
 # All supported extensions
 SUPPORTED_EXTENSIONS = ARCHIVE_EXTENSIONS | {'.nes'}
+
+
+def collect_supported_files(directory: Path) -> list[Path]:
+    """
+    Walk ``directory`` once and collect files whose extension matches a supported type.
+
+    Case-insensitive suffix match; skips entries that are not regular files or cannot be stat'd.
+    """
+    suffixes = {ext.lower() for ext in SUPPORTED_EXTENSIONS}
+    paths: list[Path] = []
+    for path in directory.rglob('*'):
+        try:
+            if not path.is_file():
+                continue
+        except OSError:
+            continue
+        if path.suffix.lower() in suffixes:
+            paths.append(path)
+    paths.sort()
+    return paths
 
 
 def read_header_from_blocks(entry) -> Optional[bytes]:
@@ -95,10 +115,10 @@ def matches_filters(header: INESHeader, filter_trainer: bool = False,
         filter_trainer: If True, only accept ROMs with trainer
         filter_mapper: If specified, only accept this mapper number
         filter_mirroring: If specified, only accept this mirroring type (H/V/F)
-        min_prg_size: Minimum PRG ROM size in KB
-        max_prg_size: Maximum PRG ROM size in KB
-        min_chr_size: Minimum CHR ROM size in KB
-        max_chr_size: Maximum CHR ROM size in KB
+        min_prg_size: Minimum PRG ROM size in KiB
+        max_prg_size: Maximum PRG ROM size in KiB
+        min_chr_size: Minimum CHR ROM size in KiB
+        max_chr_size: Maximum CHR ROM size in KiB
         
     Returns:
         True if ROM matches all filters
@@ -119,17 +139,17 @@ def matches_filters(header: INESHeader, filter_trainer: bool = False,
         return False
     
     # Filter by PRG ROM size
-    prg_size_kb = header.prg_rom_size // 1024
-    if min_prg_size is not None and prg_size_kb < min_prg_size:
+    prg_size_kib = header.prg_rom_size // 1024
+    if min_prg_size is not None and prg_size_kib < min_prg_size:
         return False
-    if max_prg_size is not None and prg_size_kb > max_prg_size:
+    if max_prg_size is not None and prg_size_kib > max_prg_size:
         return False
     
     # Filter by CHR ROM size
-    chr_size_kb = header.chr_rom_size // 1024
-    if min_chr_size is not None and chr_size_kb < min_chr_size:
+    chr_size_kib = header.chr_rom_size // 1024
+    if min_chr_size is not None and chr_size_kib < min_chr_size:
         return False
-    if max_chr_size is not None and chr_size_kb > max_chr_size:
+    if max_chr_size is not None and chr_size_kib > max_chr_size:
         return False
     
     return True
@@ -304,7 +324,7 @@ def scan_directory(directory: Path,
     """
     Scan a directory for ROM files and archives, and process them.
     
-    Searches for .nes, .7z, and .zip files recursively.
+    Searches for .nes and configured archive types in one recursive pass.
     
     Args:
         directory: Directory to scan
@@ -314,13 +334,7 @@ def scan_directory(directory: Path,
     Returns:
         Number of successfully processed ROM files (counts individual ROMs in archives)
     """
-    # Collect all supported files
-    all_files = []
-    for ext in SUPPORTED_EXTENSIONS:
-        all_files.extend(directory.rglob(f'*{ext}'))
-    
-    # Sort by path for consistent output
-    all_files.sort()
+    all_files = collect_supported_files(directory)
     
     if not all_files:
         extensions_str = ', '.join(sorted(SUPPORTED_EXTENSIONS))
@@ -342,15 +356,14 @@ def scan_directory(directory: Path,
     return processed_count
 
 
-def parse_arguments() -> argparse.Namespace:
-    """Parse command-line arguments."""
-    # Build supported file types string from SUPPORTED_EXTENSIONS
+def build_argument_parser() -> argparse.ArgumentParser:
+    """Build the command-line argument parser."""
     supported_types = ", ".join(sorted(SUPPORTED_EXTENSIONS))
     if not LIBARCHIVE_AVAILABLE:
         supported_types += " (libarchive not available - archive support disabled)"
-    
+
     parser = argparse.ArgumentParser(
-        prog='scan_roms.py',
+        prog='ines_scan_roms.py',
         description='Scan and analyze iNES ROM files from directories and archives',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
@@ -399,29 +412,29 @@ Examples:
     parser.add_argument(
         '--min-prg',
         type=int,
-        metavar='KB',
-        help='Minimum PRG ROM size in KB'
+        metavar='KiB',
+        help='Minimum PRG ROM size in KiB'
     )
     parser.add_argument(
         '--max-prg',
         type=int,
-        metavar='KB',
-        help='Maximum PRG ROM size in KB'
+        metavar='KiB',
+        help='Maximum PRG ROM size in KiB'
     )
     parser.add_argument(
         '--min-chr',
         type=int,
-        metavar='KB',
-        help='Minimum CHR ROM size in KB'
+        metavar='KiB',
+        help='Minimum CHR ROM size in KiB'
     )
     parser.add_argument(
         '--max-chr',
         type=int,
-        metavar='KB',
-        help='Maximum CHR ROM size in KB'
+        metavar='KiB',
+        help='Maximum CHR ROM size in KiB'
     )
-    
-    return parser.parse_args()
+
+    return parser
 
 
 def main() -> int:
@@ -431,17 +444,44 @@ def main() -> int:
     Returns:
         Exit code (0 for success, non-zero for error)
     """
-    args = parse_arguments()
-    
-    # Validate directory
+    parser = build_argument_parser()
+    args = parser.parse_args()
+
+    if (
+        args.min_prg is not None
+        and args.max_prg is not None
+        and args.min_prg > args.max_prg
+    ):
+        print(
+            'Error: --min-prg cannot be greater than --max-prg',
+            file=sys.stderr,
+        )
+        parser.print_help()
+        return 1
+
+    if (
+        args.min_chr is not None
+        and args.max_chr is not None
+        and args.min_chr > args.max_chr
+    ):
+        print(
+            'Error: --min-chr cannot be greater than --max-chr',
+            file=sys.stderr,
+        )
+        parser.print_help()
+        return 1
+
+    # Validate directory — if we cannot scan, show usage
     directory_path = Path(args.directory)
-    
+
     if not directory_path.exists():
         print(f"Error: Directory does not exist: {args.directory}", file=sys.stderr)
+        parser.print_help()
         return 1
-    
+
     if not directory_path.is_dir():
         print(f"Error: Not a directory: {args.directory}", file=sys.stderr)
+        parser.print_help()
         return 1
     
     # Scan and process files
