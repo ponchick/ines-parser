@@ -23,7 +23,7 @@ except ImportError:
 
 from ines_parser import parse_ines_header, INESHeader, INES_HEADER_SIZE
 
-from .rom_fs import (
+from ines_parser.cli.rom_fs import (
     ALL_ARCHIVE_FORMATS,
     ARCHIVE_EXTENSIONS,
     LIBARCHIVE_AVAILABLE,
