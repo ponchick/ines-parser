@@ -39,6 +39,7 @@ Changelog = "https://github.com/ponchick/ines-parser/releases"
 [project.scripts]
 "ines_scan_roms.py" = "ines_parser.cli.ines_scan_roms:main"
 "ines_split_rom.py" = "ines_parser.cli.ines_split_rom:main"
+"ines_rom_stats.py" = "ines_parser.cli.ines_rom_stats:main"
 
 [tool.setuptools]
 packages = ["ines_parser", "ines_parser.cli"]

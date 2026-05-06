@@ -16,17 +16,21 @@ Optional extra for archive formats (`.7z`/`.zip`/`.rar`): `pip install "ines-par
 
 - parses ROM headers (`mapper`, PRG/CHR sizes, mirroring, and more)
 - scans ROM directories with filters
+- summarizes mapper usage across a folder (and archives when optional deps are installed)
 - splits ROM files into `PRG` and `CHR` binaries
 
 ## CLI
 
-Tools live in **`ines_parser/cli/`** as **`ines_scan_roms.py`** and **`ines_split_rom.py`**. The names match **`pip install`** entry points on your `PATH`: **`ines_scan_roms.py`** and **`ines_split_rom.py`**.
+Tools live in **`ines_parser/cli/`** as **`ines_scan_roms.py`**, **`ines_rom_stats.py`**, and **`ines_split_rom.py`**. The names match **`pip install`** entry points on your `PATH`.
 
 **Without installing**, from the repository root you can use either `-m` or the path to the same files:
 
 ```bash
 python -m ines_parser.cli.ines_scan_roms /path/to/roms
 python ines_parser/cli/ines_scan_roms.py /path/to/roms
+
+python -m ines_parser.cli.ines_rom_stats /path/to/roms
+python ines_parser/cli/ines_rom_stats.py /path/to/roms
 
 python -m ines_parser.cli.ines_split_rom game.nes
 python ines_parser/cli/ines_split_rom.py game.nes
@@ -36,6 +40,7 @@ python ines_parser/cli/ines_split_rom.py game.nes
 
 ```bash
 ines_scan_roms.py /path/to/roms
+ines_rom_stats.py /path/to/roms
 ines_split_rom.py game.nes
 ```
 
@@ -55,6 +60,16 @@ Useful filters:
 - `--has-trainer`
 - `--min-prg KiB`, `--max-prg KiB`
 - `--min-chr KiB`, `--max-chr KiB`
+
+### ROM statistics
+
+Counts valid headers per **mapper** (recursive scan; archives included when `libarchive` is available).
+
+```bash
+ines_rom_stats.py /path/to/roms
+ines_rom_stats.py rom/a rom/b --sort mapper
+ines_rom_stats.py /path/to/roms --json
+```
 
 ### Split ROM (PRG / CHR)
 

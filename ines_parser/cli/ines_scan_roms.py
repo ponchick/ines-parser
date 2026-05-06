@@ -16,71 +16,22 @@ from typing import Optional
 # Repo root on path when running this file directly (not via pip console_scripts)
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-# Try to import libarchive - make it optional
 try:
     import libarchive
-    LIBARCHIVE_AVAILABLE = True
 except ImportError:
-    LIBARCHIVE_AVAILABLE = False
+    libarchive = None  # type: ignore
 
-# Import from ines_parser package
 from ines_parser import parse_ines_header, INESHeader, INES_HEADER_SIZE
 
-
-# Constants
-DEFAULT_ARCHIVE_PATH = 'nes_archive/'
-# All potential archive formats that libarchive can support
-ALL_ARCHIVE_FORMATS = {'.7z', '.zip', '.rar'}
-# Archive extensions depend on libarchive availability
-if LIBARCHIVE_AVAILABLE:
-    ARCHIVE_EXTENSIONS = ALL_ARCHIVE_FORMATS
-else:
-    ARCHIVE_EXTENSIONS = set()
-# All supported extensions
-SUPPORTED_EXTENSIONS = ARCHIVE_EXTENSIONS | {'.nes'}
-
-
-def collect_supported_files(directory: Path) -> list[Path]:
-    """
-    Walk ``directory`` once and collect files whose extension matches a supported type.
-
-    Case-insensitive suffix match; skips entries that are not regular files or cannot be stat'd.
-    """
-    suffixes = {ext.lower() for ext in SUPPORTED_EXTENSIONS}
-    paths: list[Path] = []
-    for path in directory.rglob('*'):
-        try:
-            if not path.is_file():
-                continue
-        except OSError:
-            continue
-        if path.suffix.lower() in suffixes:
-            paths.append(path)
-    paths.sort()
-    return paths
-
-
-def read_header_from_blocks(entry) -> Optional[bytes]:
-    """
-    Read the first INES_HEADER_SIZE bytes from an archive entry.
-    
-    Args:
-        entry: Archive entry to read from
-        
-    Returns:
-        Header bytes or None if insufficient data
-    """
-    blocks = []
-    total_size = 0
-    
-    for block in entry.get_blocks():
-        blocks.append(block)
-        total_size += len(block)
-        if total_size >= INES_HEADER_SIZE:
-            break
-    
-    header_bytes = b''.join(blocks)
-    return header_bytes[:INES_HEADER_SIZE] if len(header_bytes) >= INES_HEADER_SIZE else None
+from .rom_fs import (
+    ALL_ARCHIVE_FORMATS,
+    ARCHIVE_EXTENSIONS,
+    LIBARCHIVE_AVAILABLE,
+    DEFAULT_ARCHIVE_PATH,
+    SUPPORTED_EXTENSIONS,
+    collect_supported_files,
+    read_header_from_blocks,
+)
 
 
 def format_header_info(header: INESHeader, show_all_fields: bool = False) -> str:
