@@ -43,6 +43,7 @@ ines_split_rom.py game.nes
 
 ```bash
 ines_scan_roms.py /path/to/roms
+ines_scan_roms.py /path/a /path/b
 ines_scan_roms.py /path/to/roms --mapper 4
 ines_scan_roms.py /path/to/roms --show-all
 ```

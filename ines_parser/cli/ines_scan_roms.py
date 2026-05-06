@@ -2,9 +2,10 @@
 """
 Scan and analyze iNES ROM files from directories and archives.
 
-This script scans a directory for ROM files (.nes) and archives (.7z, .zip, .rar),
-extracts and analyzes ROM headers, displaying information about mapper, mirroring,
-ROM sizes, and other header fields. Supports filtering and detailed output.
+This script scans one or more directories for ROM files (.nes) and archives
+(.7z, .zip, .rar), extracts and analyzes ROM headers, displaying information
+about mapper, mirroring, ROM sizes, and other header fields. Supports filtering
+and detailed output.
 """
 
 import argparse
@@ -372,14 +373,19 @@ Supported file types: {supported_types}
 Examples:
   %(prog)s
   %(prog)s /path/to/roms
+  %(prog)s roms/a roms/b
   %(prog)s /path/to/roms --verbose
         """
     )
     parser.add_argument(
-        'directory',
-        nargs='?',
-        default=DEFAULT_ARCHIVE_PATH,
-        help=f'Directory containing ROM files (default: {DEFAULT_ARCHIVE_PATH})'
+        'directories',
+        nargs='*',
+        default=[DEFAULT_ARCHIVE_PATH],
+        metavar='DIR',
+        help=(
+            'Directories containing ROM files (recursive scan each); '
+            f'more than one may be given (default if omitted: {DEFAULT_ARCHIVE_PATH})'
+        ),
     )
     parser.add_argument(
         '--verbose',
@@ -471,29 +477,31 @@ def main() -> int:
         parser.print_help()
         return 1
 
-    # Validate directory — if we cannot scan, show usage
-    directory_path = Path(args.directory)
+    scan_roots: list[Path] = []
+    for raw in args.directories:
+        directory_path = Path(raw)
+        if not directory_path.exists():
+            print(f"Error: Directory does not exist: {raw}", file=sys.stderr)
+            parser.print_help()
+            return 1
+        if not directory_path.is_dir():
+            print(f"Error: Not a directory: {raw}", file=sys.stderr)
+            parser.print_help()
+            return 1
+        scan_roots.append(directory_path)
 
-    if not directory_path.exists():
-        print(f"Error: Directory does not exist: {args.directory}", file=sys.stderr)
-        parser.print_help()
-        return 1
+    processed_count = 0
 
-    if not directory_path.is_dir():
-        print(f"Error: Not a directory: {args.directory}", file=sys.stderr)
-        parser.print_help()
-        return 1
-    
-    # Scan and process files
     if args.verbose:
         extensions_str = ', '.join(sorted(SUPPORTED_EXTENSIONS))
-        print(f"Scanning directory: {directory_path}", file=sys.stderr)
+        print(f"Scanning {len(scan_roots)} director{'ies' if len(scan_roots) != 1 else 'y'}:", file=sys.stderr)
+        for root in scan_roots:
+            print(f"  {root}", file=sys.stderr)
         print(f"Looking for: {extensions_str}", file=sys.stderr)
         if not LIBARCHIVE_AVAILABLE:
             archive_types = ", ".join(sorted(ALL_ARCHIVE_FORMATS))
             print(f"Warning: libarchive not available - archive support ({archive_types}) disabled", file=sys.stderr)
-        
-        # Show active filters
+
         filters = []
         if args.has_trainer:
             filters.append("has trainer")
@@ -509,21 +517,24 @@ def main() -> int:
             filters.append(f"CHR>={args.min_chr}k")
         if args.max_chr is not None:
             filters.append(f"CHR<={args.max_chr}k")
-        
+
         if filters:
             print(f"Filters: {', '.join(filters)}", file=sys.stderr)
         print()
-    
-    processed_count = scan_directory(directory_path, 
-                                    filter_trainer=args.has_trainer,
-                                    show_all_fields=args.show_all,
-                                    filter_mapper=args.mapper,
-                                    filter_mirroring=args.mirroring,
-                                    min_prg_size=args.min_prg,
-                                    max_prg_size=args.max_prg,
-                                    min_chr_size=args.min_chr,
-                                    max_chr_size=args.max_chr)
-    
+
+    for directory_path in scan_roots:
+        processed_count += scan_directory(
+            directory_path,
+            filter_trainer=args.has_trainer,
+            show_all_fields=args.show_all,
+            filter_mapper=args.mapper,
+            filter_mirroring=args.mirroring,
+            min_prg_size=args.min_prg,
+            max_prg_size=args.max_prg,
+            min_chr_size=args.min_chr,
+            max_chr_size=args.max_chr,
+        )
+
     if args.verbose:
         print(f"\nProcessed {processed_count} ROM files", file=sys.stderr)
     
