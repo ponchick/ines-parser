@@ -352,8 +352,8 @@ def scan_directory(directory: Path,
                 
     except KeyboardInterrupt:
         print('\n\nInterrupted by user', file=sys.stderr)
-        return processed_count
-    
+        raise
+
     return processed_count
 
 
