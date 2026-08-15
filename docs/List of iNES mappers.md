@@ -1,6 +1,12 @@
 # iNES Mapper List
 
-The following table lists mapper numbers known to `ines_parser`, including many NES 2.0 mapper IDs beyond the classic 8-bit range. Rows mirror `MAPPER_DATABASE` in `ines_parser/mappers.py`.
+The following tables mirror `MAPPER_DATABASE` and `SUBMAPPER_DATABASE` in
+`ines_parser/tables.py`. Mapper IDs include many NES 2.0 numbers beyond the
+classic 8-bit range. Submapper names cover allocations documented on the
+NESdev Wiki; unknown `(mapper, submapper)` pairs are reported at runtime as
+`Unknown (N)`.
+
+## Mappers
 
 |iNES Mapper|Common designation(s)|Notes|
 |---|---|---|
@@ -387,11 +393,119 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |558|Yancheng YC-03-09|Related to mappers 162-164|
 |559|Unused|No documented assignment (MAME)|
 
+## NES 2.0 Submappers
+
+Submapper `0` is usually the default / iNES-compatible behaviour for that
+mapper. Only pairs present in `SUBMAPPER_DATABASE` are listed here.
+
+|Mapper|Submapper|Name|
+|---|---|---|
+|1|0|Normal|
+|1|1|SUROM (deprecated)|
+|1|2|SOROM (deprecated)|
+|1|3|MMC1A (deprecated, use mapper 155)|
+|1|4|SXROM (deprecated)|
+|1|5|Fixed 32 KiB PRG (SEROM/SHROM/SH1ROM)|
+|1|6|2ME (Famicom Network System)|
+|2|0|Default iNES behaviour|
+|2|1|No bus conflicts|
+|2|2|AND bus conflicts|
+|3|0|Default iNES behaviour|
+|3|1|No bus conflicts|
+|3|2|AND bus conflicts|
+|4|0|Sharp MMC3|
+|4|1|MMC6|
+|4|2|MMC3C hard-wired mirroring|
+|4|3|MC-ACC|
+|4|4|NEC MMC3|
+|4|5|T9552 scrambling|
+|7|0|Default iNES behaviour|
+|7|1|No bus conflicts|
+|7|2|AND bus conflicts|
+|16|0|Unspecified (FCG-1/2 + LZ93D50)|
+|16|1|LZ93D50 + 24C01 (deprecated, use 159)|
+|16|2|Datach (deprecated, use 157)|
+|16|3|8 KiB WRAM (deprecated, use 153)|
+|16|4|FCG-1/2|
+|16|5|LZ93D50 (no/24C02 EEPROM)|
+|19|0|Default (expansion volume unspecified)|
+|19|1|Deprecated (internal battery RAM, no expansion sound)|
+|19|2|No expansion sound|
+|19|3|N163 sound 11.0–13.0 dB|
+|19|4|N163 sound 16.0–17.0 dB|
+|19|5|N163 sound 18.0–19.5 dB|
+|21|0|Combined addressing (VRC4)|
+|21|1|VRC4a|
+|21|2|VRC4c|
+|21|3|VRC2 (lower addressing)|
+|21|4|VRC2 (higher addressing)|
+|23|0|Combined addressing (VRC4)|
+|23|1|VRC4f|
+|23|2|VRC4e|
+|23|3|VRC2b|
+|23|4|VRC2 (higher addressing)|
+|25|0|Combined addressing (VRC4)|
+|25|1|VRC4b|
+|25|2|VRC4d|
+|25|3|VRC2c|
+|25|4|VRC2 (higher addressing)|
+|32|0|Normal (H/V mirroring)|
+|32|1|Major League (fixed one-screen)|
+|34|0|Normal (combined)|
+|34|1|NINA-001|
+|34|2|BNROM|
+|68|0|Normal|
+|68|1|Sunsoft Dual Cartridge System (NTB-ROM)|
+|71|0|Hardwired H/V mirroring|
+|71|1|Fire Hawk (mapper-controlled 1-screen)|
+|78|0|Unspecified|
+|78|1|Cosmo Carrier (single-screen)|
+|78|2|Deprecated|
+|78|3|Holy Diver (H/V mirroring)|
+|85|0|Unspecified|
+|85|1|VRC7b (Tiny Toon)|
+|85|2|VRC7a (Lagrange Point)|
+|91|0|YY830624C/JY830848C|
+|91|1|EJ-006-1|
+|114|0|Lion King / Aladdin scrambling|
+|114|1|Boogerman scrambling|
+|178|0|No infrared sensor|
+|178|1|Gameinis Infrared Sensor|
+|185|0|CHR enable bank unknown|
+|185|4|CHR enable if latch 0..1 = 0|
+|185|5|CHR enable if latch 0..1 = 1|
+|185|6|CHR enable if latch 0..1 = 2|
+|185|7|CHR enable if latch 0..1 = 3|
+|206|0|Namcot 118 (normal PRG banking)|
+|206|1|Unbanked 32 KiB PRG (3407/3417/3451)|
+|210|0|Unspecified (175 if PRG-RAM/battery else 340)|
+|210|1|Namco 175|
+|210|2|Namco 340|
+|215|0|UNL-8237|
+|215|1|UNL-8237A|
+|232|0|Normal|
+|232|1|Aladdin Deck Enhancer|
+|256|0|Normal|
+|256|1|Waixing VT03|
+|256|2|Power Joy Supermax|
+|256|3|Zechess/Hummer Team|
+|256|4|Qishenglong|
+|256|5|Waixing VT02|
+|256|11|Vibes|
+|256|12|Cheertone|
+|256|13|Taikee|
+|256|14|Karaoto|
+|256|15|Jungletac|
+|268|0|Coolboy|
+|268|1|Mindkids|
+
 ---
 
 ## Sources
 
 - NESdev Wiki, short summary table: [List of mappers](https://www.nesdev.org/wiki/List_of_mappers)
 - NESdev Wiki, per-mapper articles (category): [INES Mappers](https://www.nesdev.org/wiki/Category:INES_Mappers)
+- NESdev Wiki: [NES 2.0 submappers](https://www.nesdev.org/wiki/NES_2.0_submappers)
 - MAME `mmc_list` in [`nes_ines.hxx`](https://github.com/mamedev/mame/blob/master/src/devices/bus/nes/nes_ines.hxx) (PCB identifiers and file comments; extended mapper IDs)
-- Curated names and notes from the NESdev summary are preserved in `ines_parser` where they overlap; remaining rows follow the MAME mapping.
+- Curated names and notes from the NESdev summary are preserved in `ines_parser` where they overlap; remaining mapper rows follow the MAME mapping.
+- Related NES 2.0 field lookups (Vs. System, extended console, expansion device): [`NES 2.0 lookups.md`](NES%202.0%20lookups.md)

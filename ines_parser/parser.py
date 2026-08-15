@@ -6,12 +6,17 @@ Based on the iNES and NES 2.0 file format specifications
 
 from enum import Enum
 from typing import Optional, Dict, Any, List
-from .mappers import (
+from .tables import (
     get_mapper_name,
     get_mapper_alternate_names,
     get_mapper_notes,
     get_mapper_info,
     is_known_mapper,
+    get_vs_ppu_type_name,
+    get_vs_hw_type_name,
+    get_extended_console_type_name,
+    get_expansion_device_name,
+    get_submapper_name,
 )
 
 
@@ -377,6 +382,9 @@ class INESHeader:
         if self.format == INESFormat.NES_2_0:
             if self.submapper is not None:
                 result['submapper'] = self.submapper
+                result['submapper_name'] = get_submapper_name(
+                    self.mapper, self.submapper
+                )
             if self.prg_nvram_size is not None:
                 result['prg_nvram_size'] = self.prg_nvram_size
             if self.chr_ram_size is not None:
@@ -385,16 +393,25 @@ class INESHeader:
                 result['chr_nvram_size'] = self.chr_nvram_size
             if self.cpu_timing is not None:
                 result['cpu_timing'] = self.cpu_timing.value
+            # Lookup fields: keep numeric ids and add human-readable names
             if self.vs_ppu_type is not None:
                 result['vs_ppu_type'] = self.vs_ppu_type
+                result['vs_ppu_type_name'] = get_vs_ppu_type_name(self.vs_ppu_type)
             if self.vs_hw_type is not None:
                 result['vs_hw_type'] = self.vs_hw_type
+                result['vs_hw_type_name'] = get_vs_hw_type_name(self.vs_hw_type)
             if self.extended_console_type is not None:
                 result['extended_console_type'] = self.extended_console_type
+                result['extended_console_type_name'] = get_extended_console_type_name(
+                    self.extended_console_type
+                )
             if self.misc_rom_count is not None:
                 result['misc_rom_count'] = self.misc_rom_count
             if self.expansion_device is not None:
                 result['expansion_device'] = self.expansion_device
+                result['expansion_device_name'] = get_expansion_device_name(
+                    self.expansion_device
+                )
         
         # iNES 1.0 specific fields
         if hasattr(self, 'has_bus_conflicts'):

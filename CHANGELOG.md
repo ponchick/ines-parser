@@ -8,6 +8,18 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-15
+
+### Added
+
+- **`ines_parser.tables`:** unified header lookup tables — mapper names plus Vs. PPU/hardware types, extended console types, default expansion devices, and known NES 2.0 submappers; exposed via `get_*_name` helpers and `INESHeader.to_dict()` (`*_name` fields).
+- **`ines_scan_roms.py`:** human-readable field labels in text/CSV/HTML (Title Case, spaces instead of underscores); text pairs numeric ids with names (submapper, Vs., expansion, etc.).
+- **Docs:** `docs/List of iNES mappers.md` includes a NES 2.0 submappers table; new `docs/NES 2.0 lookups.md` documents Vs./console/expansion name tables (both mirror `ines_parser/tables.py`).
+
+### Changed
+
+- Mapper database moved into `ines_parser.tables`; `ines_parser.mappers` remains a thin re-export for compatibility.
+
 ## [1.3.0] - 2026-08-15
 
 ### Added
@@ -53,6 +65,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Narrowed exception handling in `parse_ines_header()` to avoid masking unrelated errors.
 - Corrected typing annotation in `mappers.py` from `any` to `Any`.
 
+[1.4.0]: https://github.com/ponchick/ines-parser/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/ponchick/ines-parser/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/ponchick/ines-parser/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/ponchick/ines-parser/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ponchick/ines-parser/releases/tag/v1.1.0

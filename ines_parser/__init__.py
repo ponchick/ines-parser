@@ -17,15 +17,21 @@ from .parser import (
     INES_TRAINER_SIZE,
 )
 
-from .mappers import (
+from .tables import (
     get_mapper_name,
     get_mapper_alternate_names,
     get_mapper_notes,
     get_mapper_info,
     is_known_mapper,
+    get_vs_ppu_type_name,
+    get_vs_hw_type_name,
+    get_extended_console_type_name,
+    get_expansion_device_name,
+    get_submapper_name,
+    is_known_submapper,
 )
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __author__ = "Leonid Kabanov"
 __all__ = [
     "parse_ines_header",
@@ -42,5 +48,11 @@ __all__ = [
     "get_mapper_notes",
     "get_mapper_info",
     "is_known_mapper",
+    "get_vs_ppu_type_name",
+    "get_vs_hw_type_name",
+    "get_extended_console_type_name",
+    "get_expansion_device_name",
+    "get_submapper_name",
+    "is_known_submapper",
 ]
 

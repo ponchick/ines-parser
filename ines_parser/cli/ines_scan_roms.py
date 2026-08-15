@@ -65,6 +65,7 @@ _FULL_COLUMNS = (
     "tv_system",
     "mapper",
     "submapper",
+    "submapper_name",
     "mapper_name",
     "mapper_alternates",
     "mapper_notes",
@@ -77,17 +78,77 @@ _FULL_COLUMNS = (
     "console_type",
     "cpu_timing",
     "vs_ppu_type",
+    "vs_ppu_type_name",
     "vs_hw_type",
+    "vs_hw_type_name",
     "extended_console_type",
+    "extended_console_type_name",
     "misc_rom_count",
     "expansion_device",
+    "expansion_device_name",
     "has_bus_conflicts",
 )
+
+# Human-facing labels for text / CSV / HTML (JSON keeps internal keys).
+_COLUMN_LABELS = {
+    "path": "Path",
+    "archive_member": "Archive Member",
+    "format": "Format",
+    "valid": "Valid",
+    "prg_rom_size": "PRG ROM Size",
+    "chr_rom_size": "CHR ROM Size",
+    "prg_ram_size": "PRG RAM Size",
+    "prg_nvram_size": "PRG NVRAM Size",
+    "chr_ram_size": "CHR RAM Size",
+    "chr_nvram_size": "CHR NVRAM Size",
+    "tv_system": "TV System",
+    "mapper": "Mapper",
+    "submapper": "Submapper",
+    "submapper_name": "Submapper Name",
+    "mapper_name": "Mapper Name",
+    "mapper_alternates": "Mapper Alternates",
+    "mapper_notes": "Mapper Notes",
+    "mirroring": "Mirroring",
+    "has_battery": "Has Battery",
+    "has_trainer": "Has Trainer",
+    "four_screen": "Four Screen",
+    "is_vs_unisystem": "Vs Unisystem",
+    "is_playchoice_10": "PlayChoice-10",
+    "console_type": "Console Type",
+    "cpu_timing": "CPU Timing",
+    "vs_ppu_type": "Vs PPU Type",
+    "vs_ppu_type_name": "Vs PPU Type Name",
+    "vs_hw_type": "Vs Hardware Type",
+    "vs_hw_type_name": "Vs Hardware Type Name",
+    "extended_console_type": "Extended Console Type",
+    "extended_console_type_name": "Extended Console Type Name",
+    "misc_rom_count": "Misc ROM Count",
+    "expansion_device": "Expansion Device",
+    "expansion_device_name": "Expansion Device Name",
+    "has_bus_conflicts": "Has Bus Conflicts",
+}
+
+# Numeric id + companion name key (paired in text export like mapper).
+_ID_NAME_PAIRS = {
+    "mapper": "mapper_name",
+    "submapper": "submapper_name",
+    "vs_ppu_type": "vs_ppu_type_name",
+    "vs_hw_type": "vs_hw_type_name",
+    "extended_console_type": "extended_console_type_name",
+    "expansion_device": "expansion_device_name",
+}
 
 
 def _is_size_key(key: str) -> bool:
     """True for header size fields (bytes in to_dict; KiB in short mode)."""
     return key.endswith("_size")
+
+
+def _friendly_label(key: str) -> str:
+    """Human-readable column / field label (Title Case, no underscores)."""
+    if key in _COLUMN_LABELS:
+        return _COLUMN_LABELS[key]
+    return key.replace("_", " ").title()
 
 
 def _header_columns(show_all: bool) -> tuple[str, ...]:
@@ -130,10 +191,13 @@ def _write_csv(
     delimiter: str = ",",
 ) -> None:
     columns = _collect_columns(rows, show_all)
-    writer = csv.DictWriter(out, fieldnames=columns, delimiter=delimiter, lineterminator="\n")
+    labels = [_friendly_label(col) for col in columns]
+    writer = csv.DictWriter(out, fieldnames=labels, delimiter=delimiter, lineterminator="\n")
     writer.writeheader()
     for row in rows:
-        writer.writerow({col: _flatten_cell(row.get(col)) for col in columns})
+        writer.writerow(
+            {_friendly_label(col): _flatten_cell(row.get(col)) for col in columns}
+        )
 
 
 def _write_json(rows: Sequence[dict[str, Any]], out: TextIO, show_all: bool) -> None:
@@ -179,7 +243,7 @@ def _write_html(rows: Sequence[dict[str, Any]], out: TextIO, show_all: bool) -> 
     out.write("<h1>iNES ROM scan</h1>\n")
     out.write(f"<table>\n<caption>{len(rows)} ROM(s)</caption>\n<thead>\n<tr>\n")
     for col in columns:
-        out.write(f"<th>{html.escape(col)}</th>\n")
+        out.write(f"<th>{html.escape(_friendly_label(col))}</th>\n")
     out.write("</tr>\n</thead>\n<tbody>\n")
     for row in rows:
         out.write("<tr>\n")
@@ -261,22 +325,18 @@ def _format_row_text(row: dict[str, Any], show_all: bool = False) -> str:
         if key in skip:
             continue
 
-        if key == "mapper":
-            mapper = row.get("mapper")
-            name = row.get("mapper_name")
-            if mapper is None:
+        name_key = _ID_NAME_PAIRS.get(key)
+        if name_key is not None:
+            id_value = row.get(key)
+            name = row.get(name_key)
+            if id_value is None:
                 continue
+            label = _friendly_label(key)
             if name:
-                parts.append(f"mapper: {mapper} ({name})")
-                skip.add("mapper_name")
+                parts.append(f"{label}: {id_value} ({name})")
+                skip.add(name_key)
             else:
-                parts.append(f"mapper: {mapper}")
-            continue
-
-        if key == "mapper_name":
-            name = row.get("mapper_name")
-            if name:
-                parts.append(f"mapper_name: {name}")
+                parts.append(f"{label}: {id_value}")
             continue
 
         value = row.get(key)
@@ -284,6 +344,8 @@ def _format_row_text(row: dict[str, Any], show_all: bool = False) -> str:
             continue
         if value == "" or value == []:
             continue
+
+        label = _friendly_label(key)
 
         if _is_size_key(key):
             if not isinstance(value, int):
@@ -296,19 +358,22 @@ def _format_row_text(row: dict[str, Any], show_all: bool = False) -> str:
                 elif key == "chr_rom_size":
                     parts.append(f"CHR: {value} KiB")
                 elif value:
-                    parts.append(f"{key}: {value} KiB")
+                    parts.append(f"{label}: {value} KiB")
             else:
                 if key not in ("prg_rom_size", "chr_rom_size") and not value:
                     continue
-                parts.append(f"{key}: {value} bytes")
-        elif key == "mirroring":
-            parts.append(f"mirroring: {value}")
+                parts.append(f"{label}: {value} bytes")
         elif isinstance(value, bool):
             if value:
-                label = key.removeprefix("is_").removeprefix("has_").replace("_", " ")
-                parts.append(label)
+                short = (
+                    key.removeprefix("is_")
+                    .removeprefix("has_")
+                    .replace("_", " ")
+                    .title()
+                )
+                parts.append(short)
         else:
-            parts.append(f"{key}: {_flatten_cell(value)}")
+            parts.append(f"{label}: {_flatten_cell(value)}")
 
     return ", ".join(parts)
 

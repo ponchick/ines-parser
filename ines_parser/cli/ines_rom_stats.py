@@ -23,7 +23,7 @@ except ImportError:
     libarchive = None  # type: ignore
 
 from ines_parser import INES_HEADER_SIZE, parse_ines_header
-from ines_parser.mappers import get_mapper_name
+from ines_parser.tables import get_mapper_name
 
 from ines_parser.cli.rom_fs import (
     ALL_ARCHIVE_FORMATS,

@@ -61,7 +61,10 @@ if header and header.is_valid():
 
 ## Docs
 
-- `docs/iNES.md`
+- `docs/iNES.md` — iNES header notes
+- `docs/NES2.0.md` — NES 2.0 header layout
+- `docs/List of iNES mappers.md` — mapper and submapper name tables (from `ines_parser/tables.py`)
+- `docs/NES 2.0 lookups.md` — Vs. PPU/hardware, extended console, expansion device names
 - [NESdev iNES](https://www.nesdev.org/wiki/INES)
 - [NESdev NES 2.0](https://www.nesdev.org/wiki/NES_2.0)
 

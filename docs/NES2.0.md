@@ -284,12 +284,12 @@ For cartridges with self-flashable PRG-ROM, the Battery bit is only set if the g
 
 For non-homebrew NES/Famicom games, this field's value is always a function of the region in which a game was released:
 
-| Value | Meaning     | Regions                                                              |
-|-------|-------------|----------------------------------------------------------------------|
-| 0     | RP2C02      | North America, Japan, South Korea, Taiwan, Hong Kong, South America  |
-| 1     | RP2C07      | Western Europe, Australia, South Africa                              |
-| 2     | Multiple    | Multiple                                                             |
-| 3     | UA6538      | Eastern Europe (including Russia), Mainland China, India, North Africa, Saudi Arabia |
+| Value | Meaning  | Regions                                                                              |
+|-------|----------|--------------------------------------------------------------------------------------|
+| 0     | RP2C02   | North America, Japan, South Korea, Taiwan, Hong Kong, South America                  |
+| 1     | RP2C07   | Western Europe, Australia, South Africa                                              |
+| 2     | Multiple | Multiple                                                                             |
+| 3     | UA6538   | Eastern Europe (including Russia), Mainland China, India, North Africa, Saudi Arabia |
 
 Value 2 ("multiple-region") is used either if a game was released with identical ROM content in both NTSC and PAL countries, such as Nintendo's early games, or if the game detects the console's timing and adjusts itself. Emulators should implement this value by either switching to a user-specified "Default Region" or by keeping the previously-set region.
 
@@ -415,6 +415,8 @@ This byte does not denote devices that connect to a cartridge; such devices are 
 ## See Also
 
 - NES 2.0 submappers - disambiguation for mappers that were under-specified in iNES 1
+- [`List of iNES mappers.md`](List%20of%20iNES%20mappers.md) — mapper and submapper names used by this package
+- [`NES 2.0 lookups.md`](NES%202.0%20lookups.md) — Vs. PPU/hardware, extended console, expansion device names
 - NES 2.0 header for ca65 - macro header generator for ca65 assembly
 - NES 2.0 header for cc65 - macro header generator for cc65 C code
 
