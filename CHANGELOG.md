@@ -8,11 +8,17 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-15
+
 ### Added
 
-- **`ines_scan_roms.py`:** export via `--format {text,html,csv,json}` and optional `-o`. `--show-all` selects the full header field set. CSV supports `-d` / `--delimiter` (e.g. `;` for Excel RU, `tab` for tab-separated) and uses UTF-8 BOM. Short output converts size fields to KiB (`// 1024`); `--show-all` keeps bytes.
-- **`INESHeader.to_dict()`:** dropped redundant `prg_rom_size_kib` / `chr_rom_size_kib` (derive with `// 1024` if needed).
-- **`ines_parser.mappers`:** names for previously unknown mapper IDs found in the wild (82, 111, 127, 170, 256, 260, 272, 355, 400, 405, 408, 446, 515, 517, 523, 526, 534, 538, 540, 544, 547, 548, 558, 559), from NESdev Wiki / MAME comments.
+- **`ines_rom_stats.py`:** summarize mapper usage across directories (and archives); optional `--json`.
+- **`ines_scan_roms.py`:** scan multiple directories; export via `--format {text,html,csv,json}` and optional `-o`; CSV `--delimiter` / `-d` (e.g. `;` for Excel RU, `tab` for TSV-style); UTF-8 BOM for CSV; `--show-all` selects the full header field set for every format. Short mode reports sizes in KiB; `--show-all` uses bytes.
+- **`ines_parser.mappers`:** names for previously unknown mapper IDs found in the wild (82, 111, 127, 170, 256, 260, 272, 355, 400, 405, 408, 446, 515, 517, 523, 526, 534, 538, 540, 544, 547, 548, 558, 559).
+
+### Deprecated
+
+- **`INESHeader.to_dict()`:** `prg_rom_size_kib` and `chr_rom_size_kib` — use `prg_rom_size // 1024` and `chr_rom_size // 1024` instead. Kept through 1.x; planned removal in 2.0.
 
 ## [1.2.1] - 2026-05-03
 

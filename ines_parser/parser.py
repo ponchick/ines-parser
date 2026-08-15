@@ -330,7 +330,13 @@ class INESHeader:
         return get_mapper_info(self.mapper)
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert header to dictionary for easy access"""
+        """
+        Convert header to dictionary for easy access.
+
+        ``prg_rom_size_kib`` and ``chr_rom_size_kib`` are deprecated; prefer
+        ``prg_rom_size // 1024`` and ``chr_rom_size // 1024``. They remain in
+        1.x for compatibility and are planned for removal in 2.0.
+        """
         if not self.is_valid():
             return {
                 'format': self.format.value,
@@ -344,6 +350,10 @@ class INESHeader:
             'valid': True,
             'prg_rom_size': self.prg_rom_size,
             'chr_rom_size': self.chr_rom_size,
+            # Deprecated: use prg_rom_size // 1024 and chr_rom_size // 1024.
+            # Kept for 1.x compatibility; planned removal in 2.0.
+            'prg_rom_size_kib': self.prg_rom_size // 1024,
+            'chr_rom_size_kib': self.chr_rom_size // 1024,
             'mapper': self.mapper,
             'mapper_name': mapper_info['name'],
             'mapper_alternates': mapper_info['alternates'],

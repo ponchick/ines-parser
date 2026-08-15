@@ -1,6 +1,6 @@
 # iNES Parser
 
-Python library and CLI for NES ROMs in iNES / NES 2.0 format. Requires Python 3.10+.
+Python library and CLI for NES ROMs in iNES / NES 2.0 format: parse headers, scan collections, export reports, summarize mappers, and split PRG/CHR. Requires Python 3.10+.
 
 ```bash
 pip install ines-parser
