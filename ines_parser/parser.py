@@ -344,8 +344,6 @@ class INESHeader:
             'valid': True,
             'prg_rom_size': self.prg_rom_size,
             'chr_rom_size': self.chr_rom_size,
-            'prg_rom_size_kib': self.prg_rom_size // 1024,
-            'chr_rom_size_kib': self.chr_rom_size // 1024,
             'mapper': self.mapper,
             'mapper_name': mapper_info['name'],
             'mapper_alternates': mapper_info['alternates'],

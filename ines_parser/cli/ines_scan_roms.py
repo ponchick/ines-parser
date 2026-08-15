@@ -5,7 +5,7 @@ Scan and analyze iNES ROM files from directories and archives.
 This script scans one or more directories for ROM files (.nes) and archives
 (.7z, .zip, .rar), extracts and analyzes ROM headers, displaying information
 about mapper, mirroring, ROM sizes, and other header fields. Supports filtering
-and detailed output, plus structured export (HTML/CSV/TSV/JSON).
+and detailed output, plus export to HTML/CSV/JSON.
 """
 
 from __future__ import annotations
@@ -39,18 +39,32 @@ from ines_parser.cli.rom_fs import (
     read_header_from_blocks,
 )
 
-STRUCTURED_FORMATS = frozenset({"html", "csv", "tsv", "json"})
-
-# Stable column order for tabular formats (path fields first, then header keys).
+# Path columns always first, then header fields for the selected detail level.
 _PATH_COLUMNS = ("path", "archive_member")
-_HEADER_COLUMNS = (
+
+# Default (short) list. Size fields use the same names as full, but values are KiB.
+_BASIC_COLUMNS = (
+    "mapper",
+    "mapper_name",
+    "mirroring",
+    "has_bus_conflicts",
+    "prg_rom_size",
+    "chr_rom_size",
+)
+
+# --show-all (long) list: size fields in bytes.
+_FULL_COLUMNS = (
     "format",
     "valid",
     "prg_rom_size",
     "chr_rom_size",
-    "prg_rom_size_kib",
-    "chr_rom_size_kib",
+    "prg_ram_size",
+    "prg_nvram_size",
+    "chr_ram_size",
+    "chr_nvram_size",
+    "tv_system",
     "mapper",
+    "submapper",
     "mapper_name",
     "mapper_alternates",
     "mapper_notes",
@@ -61,12 +75,6 @@ _HEADER_COLUMNS = (
     "is_vs_unisystem",
     "is_playchoice_10",
     "console_type",
-    "prg_ram_size",
-    "tv_system",
-    "submapper",
-    "prg_nvram_size",
-    "chr_ram_size",
-    "chr_nvram_size",
     "cpu_timing",
     "vs_ppu_type",
     "vs_hw_type",
@@ -75,7 +83,15 @@ _HEADER_COLUMNS = (
     "expansion_device",
     "has_bus_conflicts",
 )
-_ALL_COLUMNS = _PATH_COLUMNS + _HEADER_COLUMNS
+
+
+def _is_size_key(key: str) -> bool:
+    """True for header size fields (bytes in to_dict; KiB in short mode)."""
+    return key.endswith("_size")
+
+
+def _header_columns(show_all: bool) -> tuple[str, ...]:
+    return _FULL_COLUMNS if show_all else _BASIC_COLUMNS
 
 
 def _flatten_cell(value: Any) -> str:
@@ -89,30 +105,39 @@ def _flatten_cell(value: Any) -> str:
     return str(value)
 
 
-def _collect_columns(rows: Sequence[dict[str, Any]]) -> list[str]:
-    """Return column names present in at least one row, in stable order."""
+def _collect_columns(rows: Sequence[dict[str, Any]], show_all: bool) -> list[str]:
+    """Return column names in stable order for the selected field set."""
+    header_cols = _header_columns(show_all)
+    if not show_all:
+        # Fixed headers so basic CSV always has the same shape as text summary.
+        return list(_PATH_COLUMNS) + list(header_cols)
+
     columns = list(_PATH_COLUMNS)
-    for key in _HEADER_COLUMNS:
+    for key in header_cols:
         if any(key in row and row[key] is not None for row in rows):
             columns.append(key)
-    known = set(_ALL_COLUMNS)
+    known = set(_PATH_COLUMNS) | set(header_cols)
     extras = sorted({k for row in rows for k in row if k not in known})
     columns.extend(extras)
     return columns
 
 
 def _write_csv(
-    rows: Sequence[dict[str, Any]], out: TextIO, *, delimiter: str = ","
+    rows: Sequence[dict[str, Any]],
+    out: TextIO,
+    show_all: bool,
+    *,
+    delimiter: str = ",",
 ) -> None:
-    columns = _collect_columns(rows)
+    columns = _collect_columns(rows, show_all)
     writer = csv.DictWriter(out, fieldnames=columns, delimiter=delimiter, lineterminator="\n")
     writer.writeheader()
     for row in rows:
         writer.writerow({col: _flatten_cell(row.get(col)) for col in columns})
 
 
-def _write_json(rows: Sequence[dict[str, Any]], out: TextIO) -> None:
-    columns = _collect_columns(rows)
+def _write_json(rows: Sequence[dict[str, Any]], out: TextIO, show_all: bool) -> None:
+    columns = _collect_columns(rows, show_all)
     payload = []
     for row in rows:
         item: dict[str, Any] = {}
@@ -128,8 +153,8 @@ def _write_json(rows: Sequence[dict[str, Any]], out: TextIO) -> None:
     out.write("\n")
 
 
-def _write_html(rows: Sequence[dict[str, Any]], out: TextIO) -> None:
-    columns = _collect_columns(rows)
+def _write_html(rows: Sequence[dict[str, Any]], out: TextIO, show_all: bool) -> None:
+    columns = _collect_columns(rows, show_all)
     out.write("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
     out.write('<meta charset="utf-8">\n')
     out.write("<title>iNES ROM scan</title>\n")
@@ -164,18 +189,46 @@ def _write_html(rows: Sequence[dict[str, Any]], out: TextIO) -> None:
     out.write("</tbody>\n</table>\n</body>\n</html>\n")
 
 
-def write_export(fmt: str, rows: Sequence[dict[str, Any]], out: TextIO) -> None:
-    """Dispatch to the appropriate structured-format writer."""
-    if fmt == "csv":
-        _write_csv(rows, out)
-    elif fmt == "tsv":
-        _write_csv(rows, out, delimiter="\t")
+def _resolve_delimiter(value: str) -> str | None:
+    """Return a one-character delimiter, or None if *value* is invalid."""
+    if value.lower() == "tab" or value == "\\t":
+        return "\t"
+    if len(value) == 1:
+        return value
+    return None
+
+
+def write_export(
+    fmt: str,
+    rows: Sequence[dict[str, Any]],
+    out: TextIO,
+    show_all: bool = False,
+    delimiter: str = ",",
+) -> None:
+    """Dispatch to the appropriate format writer."""
+    if fmt == "text":
+        _write_text(rows, out, show_all)
+    elif fmt == "csv":
+        _write_csv(rows, out, show_all, delimiter=delimiter)
     elif fmt == "json":
-        _write_json(rows, out)
+        _write_json(rows, out, show_all)
     elif fmt == "html":
-        _write_html(rows, out)
+        _write_html(rows, out, show_all)
     else:
         raise ValueError(f"Unsupported export format: {fmt}")
+
+
+def _write_text(
+    rows: Sequence[dict[str, Any]], out: TextIO, show_all: bool
+) -> None:
+    for row in rows:
+        path = row.get("path", "")
+        member = row.get("archive_member") or ""
+        body = _format_row_text(row, show_all)
+        if member:
+            out.write(f"{path}:{member}: {body}\n")
+        else:
+            out.write(f"{path}: {body}\n")
 
 
 def open_export_stream(path: str | None, fmt: str):
@@ -199,23 +252,65 @@ def open_export_stream(path: str | None, fmt: str):
     return _cm()
 
 
-def format_header_info(header: INESHeader, show_all_fields: bool = False) -> str:
-    """
-    Format header information for display.
+def _format_row_text(row: dict[str, Any], show_all: bool = False) -> str:
+    """Render a collected row as a human-readable comma-separated line."""
+    parts: list[str] = []
+    skip: set[str] = set()
 
-    Args:
-        header: Parsed iNES header
-        show_all_fields: If True, show all header fields (mirroring, battery, trainer, etc.)
+    for key in _header_columns(show_all):
+        if key in skip:
+            continue
 
-    Returns:
-        Formatted string with header information
-    """
-    if not header.is_valid():
-        return header.format.value
+        if key == "mapper":
+            mapper = row.get("mapper")
+            name = row.get("mapper_name")
+            if mapper is None:
+                continue
+            if name:
+                parts.append(f"mapper: {mapper} ({name})")
+                skip.add("mapper_name")
+            else:
+                parts.append(f"mapper: {mapper}")
+            continue
 
-    if show_all_fields:
-        return header.detailed_str()
-    return str(header)
+        if key == "mapper_name":
+            name = row.get("mapper_name")
+            if name:
+                parts.append(f"mapper_name: {name}")
+            continue
+
+        value = row.get(key)
+        if value is None:
+            continue
+        if value == "" or value == []:
+            continue
+
+        if _is_size_key(key):
+            if not isinstance(value, int):
+                continue
+            if not show_all:
+                if key == "chr_rom_size" and not value:
+                    continue
+                if key == "prg_rom_size":
+                    parts.append(f"PRG: {value} KiB")
+                elif key == "chr_rom_size":
+                    parts.append(f"CHR: {value} KiB")
+                elif value:
+                    parts.append(f"{key}: {value} KiB")
+            else:
+                if key not in ("prg_rom_size", "chr_rom_size") and not value:
+                    continue
+                parts.append(f"{key}: {value} bytes")
+        elif key == "mirroring":
+            parts.append(f"mirroring: {value}")
+        elif isinstance(value, bool):
+            if value:
+                label = key.removeprefix("is_").removeprefix("has_").replace("_", " ")
+                parts.append(label)
+        else:
+            parts.append(f"{key}: {_flatten_cell(value)}")
+
+    return ", ".join(parts)
 
 
 def matches_filters(
@@ -271,18 +366,27 @@ def matches_filters(
     return True
 
 
-def _emit_message(message: str, *, structured: bool) -> None:
-    """Print a status/error line; structured modes keep stdout clean for export."""
-    print(message, file=sys.stderr if structured else sys.stdout)
+def _emit_message(message: str) -> None:
+    """Print a status/error line to stderr (keeps stdout clean for -o)."""
+    print(message, file=sys.stderr)
 
 
 def _row_from_header(
     path: str,
     header: INESHeader,
     archive_member: str = "",
+    show_all: bool = False,
 ) -> dict[str, Any]:
+    data = header.to_dict()
     row: dict[str, Any] = {"path": path, "archive_member": archive_member}
-    row.update(header.to_dict())
+    for key in _header_columns(show_all):
+        if key not in data:
+            continue
+        value = data[key]
+        # Short mode: all size fields as KiB (same keys, // 1024).
+        if not show_all and _is_size_key(key) and isinstance(value, int):
+            value = value // 1024
+        row[key] = value
     return row
 
 
@@ -290,7 +394,6 @@ def process_nes_file(
     file_path: Path,
     base_path: Path,
     filter_trainer: bool = False,
-    show_all_fields: bool = False,
     filter_mapper: int | None = None,
     filter_mirroring: str | None = None,
     min_prg_size: int | None = None,
@@ -298,8 +401,8 @@ def process_nes_file(
     min_chr_size: int | None = None,
     max_chr_size: int | None = None,
     *,
-    structured: bool = False,
     rows: list[dict[str, Any]] | None = None,
+    show_all: bool = False,
 ) -> bool:
     """
     Process a plain .nes file and display or collect ROM information.
@@ -317,14 +420,13 @@ def process_nes_file(
             if len(header_bytes) < INES_HEADER_SIZE:
                 _emit_message(
                     f"{rel}: File too short (less than {INES_HEADER_SIZE} bytes)",
-                    structured=structured,
                 )
                 return False
 
             header = parse_ines_header(header_bytes)
 
             if not header:
-                _emit_message(f"{rel}: Failed to parse header", structured=structured)
+                _emit_message(f"{rel}: Failed to parse header")
                 return False
 
             if not matches_filters(
@@ -339,15 +441,12 @@ def process_nes_file(
             ):
                 return False
 
-            if structured:
-                assert rows is not None
-                rows.append(_row_from_header(rel, header))
-            else:
-                print(f"{rel}: {format_header_info(header, show_all_fields)}")
+            assert rows is not None
+            rows.append(_row_from_header(rel, header, show_all=show_all))
             return True
 
     except Exception as e:
-        _emit_message(f"{rel}: Error reading file: {e}", structured=structured)
+        _emit_message(f"{rel}: Error reading file: {e}")
         return False
 
 
@@ -355,7 +454,6 @@ def process_archive(
     archive_path: Path,
     base_path: Path,
     filter_trainer: bool = False,
-    show_all_fields: bool = False,
     filter_mapper: int | None = None,
     filter_mirroring: str | None = None,
     min_prg_size: int | None = None,
@@ -363,8 +461,8 @@ def process_archive(
     min_chr_size: int | None = None,
     max_chr_size: int | None = None,
     *,
-    structured: bool = False,
     rows: list[dict[str, Any]] | None = None,
+    show_all: bool = False,
 ) -> int:
     """
     Process an archive and display or collect ROM information for all .nes files.
@@ -397,7 +495,6 @@ def process_archive(
                             _emit_message(
                                 f"{rel}:{entry.name}: File too short "
                                 f"(less than {INES_HEADER_SIZE} bytes)",
-                                structured=structured,
                             )
                             continue
 
@@ -406,7 +503,6 @@ def process_archive(
                         if not header:
                             _emit_message(
                                 f"{rel}:{entry.name}: Failed to parse header",
-                                structured=structured,
                             )
                             continue
 
@@ -422,28 +518,26 @@ def process_archive(
                         ):
                             continue
 
-                        if structured:
-                            assert rows is not None
-                            rows.append(
-                                _row_from_header(rel, header, archive_member=entry.name)
+                        assert rows is not None
+                        rows.append(
+                            _row_from_header(
+                                rel,
+                                header,
+                                archive_member=entry.name,
+                                show_all=show_all,
                             )
-                        else:
-                            print(
-                                f"{rel}:{entry.name}: "
-                                f"{format_header_info(header, show_all_fields)}"
-                            )
+                        )
                         processed_count += 1
 
                 if nes_files_found == 0:
                     _emit_message(
                         f"{rel}: No .nes files found in archive",
-                        structured=structured,
                     )
 
                 return processed_count
 
     except Exception as e:
-        _emit_message(f"{rel}: Error reading archive: {e}", structured=structured)
+        _emit_message(f"{rel}: Error reading archive: {e}")
         return 0
 
 
@@ -451,7 +545,6 @@ def process_file(
     file_path: Path,
     base_path: Path,
     filter_trainer: bool = False,
-    show_all_fields: bool = False,
     filter_mapper: int | None = None,
     filter_mirroring: str | None = None,
     min_prg_size: int | None = None,
@@ -459,8 +552,8 @@ def process_file(
     min_chr_size: int | None = None,
     max_chr_size: int | None = None,
     *,
-    structured: bool = False,
     rows: list[dict[str, Any]] | None = None,
+    show_all: bool = False,
 ) -> int:
     """
     Process a file based on its extension.
@@ -477,15 +570,14 @@ def process_file(
                 file_path,
                 base_path,
                 filter_trainer,
-                show_all_fields,
                 filter_mapper,
                 filter_mirroring,
                 min_prg_size,
                 max_prg_size,
                 min_chr_size,
                 max_chr_size,
-                structured=structured,
                 rows=rows,
+                show_all=show_all,
             )
             else 0
         )
@@ -494,15 +586,14 @@ def process_file(
             file_path,
             base_path,
             filter_trainer,
-            show_all_fields,
             filter_mapper,
             filter_mirroring,
             min_prg_size,
             max_prg_size,
             min_chr_size,
             max_chr_size,
-            structured=structured,
             rows=rows,
+            show_all=show_all,
         )
     return 0
 
@@ -510,7 +601,6 @@ def process_file(
 def scan_directory(
     directory: Path,
     filter_trainer: bool = False,
-    show_all_fields: bool = False,
     filter_mapper: int | None = None,
     filter_mirroring: str | None = None,
     min_prg_size: int | None = None,
@@ -518,8 +608,8 @@ def scan_directory(
     min_chr_size: int | None = None,
     max_chr_size: int | None = None,
     *,
-    structured: bool = False,
     rows: list[dict[str, Any]] | None = None,
+    show_all: bool = False,
 ) -> int:
     """
     Scan a directory for ROM files and archives, and process them.
@@ -544,15 +634,14 @@ def scan_directory(
             file_path,
             directory,
             filter_trainer,
-            show_all_fields,
             filter_mapper,
             filter_mirroring,
             min_prg_size,
             max_prg_size,
             min_chr_size,
             max_chr_size,
-            structured=structured,
             rows=rows,
+            show_all=show_all,
         )
 
     return processed_count
@@ -569,16 +658,14 @@ def build_argument_parser() -> argparse.ArgumentParser:
         description="Scan and analyze iNES ROM files from directories and archives",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Supported file types: {supported_types}
+Supported: {supported_types}
 
 Examples:
-  %(prog)s
   %(prog)s /path/to/roms
-  %(prog)s roms/a roms/b
-  %(prog)s /path/to/roms --verbose
-  %(prog)s /path/to/roms --format html -o report.html
+  %(prog)s /path/to/roms --mapper 4 --show-all
   %(prog)s /path/to/roms --format csv -o roms.csv
-  %(prog)s /path/to/roms --mapper 4 --format tsv
+  %(prog)s /path/to/roms --format csv -d ';' -o roms.csv
+  %(prog)s /path/to/roms --format csv --show-all -o roms-full.csv
         """,
     )
     parser.add_argument(
@@ -586,74 +673,78 @@ Examples:
         nargs="*",
         default=[DEFAULT_ARCHIVE_PATH],
         metavar="DIR",
-        help=(
-            "Directories containing ROM files (recursive scan each); "
-            f"more than one may be given (default if omitted: {DEFAULT_ARCHIVE_PATH})"
-        ),
+        help=f"Scan roots (default: {DEFAULT_ARCHIVE_PATH})",
     )
     parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
-        help="Verbose output",
+        help="Verbose progress on stderr",
     )
     parser.add_argument(
         "--has-trainer",
         action="store_true",
-        help="Show only ROMs with trainer",
+        help="Only ROMs with trainer",
     )
     parser.add_argument(
         "--show-all",
         action="store_true",
-        help="Show all header fields (trainer, battery, etc.); text format only",
+        help="Full header fields (all output formats)",
     )
     parser.add_argument(
         "--mapper",
         type=int,
         metavar="N",
-        help="Filter by mapper number (e.g., --mapper 1)",
+        help="Filter by mapper number",
     )
     parser.add_argument(
         "--mirroring",
         choices=["H", "V", "F"],
         metavar="TYPE",
-        help="Filter by mirroring type: H (horizontal), V (vertical), F (four-screen)",
+        help="Filter mirroring: H, V, or F",
     )
     parser.add_argument(
         "--min-prg",
         type=int,
         metavar="KiB",
-        help="Minimum PRG ROM size in KiB",
+        help="Min PRG ROM size (KiB)",
     )
     parser.add_argument(
         "--max-prg",
         type=int,
         metavar="KiB",
-        help="Maximum PRG ROM size in KiB",
+        help="Max PRG ROM size (KiB)",
     )
     parser.add_argument(
         "--min-chr",
         type=int,
         metavar="KiB",
-        help="Minimum CHR ROM size in KiB",
+        help="Min CHR ROM size (KiB)",
     )
     parser.add_argument(
         "--max-chr",
         type=int,
         metavar="KiB",
-        help="Maximum CHR ROM size in KiB",
+        help="Max CHR ROM size (KiB)",
     )
     parser.add_argument(
         "--format",
-        choices=["text", "html", "csv", "tsv", "json"],
+        choices=["text", "html", "csv", "json"],
         default="text",
         help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        metavar="SEP",
+        default=",",
+        help="CSV field delimiter (default: ,). Use ';' for Excel RU, tab for TSV",
     )
     parser.add_argument(
         "-o",
         "--output",
         metavar="PATH",
-        help="Write export to PATH instead of stdout (structured formats)",
+        help="Write output to PATH (all formats)",
     )
 
     return parser
@@ -693,12 +784,21 @@ def main() -> int:
         parser.print_help()
         return 1
 
-    if args.output is not None and args.format == "text":
+    delimiter = _resolve_delimiter(args.delimiter)
+    if delimiter is None:
         print(
-            "Error: --output requires a structured --format (html, csv, tsv, or json)",
+            "Error: --delimiter must be a single character, or 'tab'",
             file=sys.stderr,
         )
         return 1
+
+    if args.format != "csv" and args.delimiter != ",":
+        print(
+            "Error: --delimiter is only valid with --format csv",
+            file=sys.stderr,
+        )
+        return 1
+
 
     scan_roots: list[Path] = []
     for raw in args.directories:
@@ -713,7 +813,6 @@ def main() -> int:
             return 1
         scan_roots.append(directory_path)
 
-    structured = args.format in STRUCTURED_FORMATS
     rows: list[dict[str, Any]] = []
     processed_count = 0
 
@@ -753,8 +852,9 @@ def main() -> int:
 
         if filters:
             print(f"Filters: {', '.join(filters)}", file=sys.stderr)
-        if structured:
-            print(f"Format: {args.format}", file=sys.stderr)
+        print(f"Format: {args.format}", file=sys.stderr)
+        if args.show_all:
+            print("Fields: full", file=sys.stderr)
         print(file=sys.stderr)
 
     try:
@@ -762,20 +862,24 @@ def main() -> int:
             processed_count += scan_directory(
                 directory_path,
                 filter_trainer=args.has_trainer,
-                show_all_fields=args.show_all,
                 filter_mapper=args.mapper,
                 filter_mirroring=args.mirroring,
                 min_prg_size=args.min_prg,
                 max_prg_size=args.max_prg,
                 min_chr_size=args.min_chr,
                 max_chr_size=args.max_chr,
-                structured=structured,
-                rows=rows if structured else None,
+                rows=rows,
+                show_all=args.show_all,
             )
 
-        if structured:
-            with open_export_stream(args.output, args.format) as out:
-                write_export(args.format, rows, out)
+        with open_export_stream(args.output, args.format) as out:
+            write_export(
+                args.format,
+                rows,
+                out,
+                show_all=args.show_all,
+                delimiter=delimiter,
+            )
     except KeyboardInterrupt:
         print("\nInterrupted.", file=sys.stderr)
         return 130

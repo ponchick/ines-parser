@@ -4,47 +4,46 @@ Python library and CLI for NES ROMs in iNES / NES 2.0 format. Requires Python 3.
 
 ```bash
 pip install ines-parser
-# optional: .7z / .zip / .rar support
-pip install "ines-parser[archive]"
+pip install "ines-parser[archive]"   # optional: .7z / .zip / .rar
 ```
 
 ## CLI
 
-After install, three tools are on your `PATH`. From a checkout you can also run them as modules or scripts:
+After install the tools are on your `PATH`. From a checkout:
 
 ```bash
 ines_scan_roms.py /path/to/roms
 # or: python -m ines_parser.cli.ines_scan_roms /path/to/roms
-# or: python ines_parser/cli/ines_scan_roms.py /path/to/roms
 ```
 
-Same pattern for `ines_rom_stats.py` and `ines_split_rom.py`.
+Same idea for `ines_rom_stats.py` and `ines_split_rom.py`.
 
-**Scan** — list headers, filter, optionally export:
+### Scan
 
 ```bash
 ines_scan_roms.py /path/to/roms
 ines_scan_roms.py /a /b --mapper 4 --show-all
 ines_scan_roms.py /path/to/roms --format csv -o roms.csv
-ines_scan_roms.py /path/to/roms --format html -o report.html
+ines_scan_roms.py /path/to/roms --format csv -d ';' -o roms.csv
+ines_scan_roms.py /path/to/roms --format csv --show-all -o roms-full.csv
 ```
 
-Filters: `--mapper`, `--mirroring H|V|F`, `--has-trainer`, `--min-prg` / `--max-prg`, `--min-chr` / `--max-chr` (sizes in KiB).
+Filters: `--mapper`, `--mirroring H|V|F`, `--has-trainer`, `--min-prg` / `--max-prg`, `--min-chr` / `--max-chr` (KiB).
 
-`--format` is `text` (default), `html`, `csv`, `tsv`, or `json`. Use `-o` to write a file. CSV is UTF-8 with a BOM so Excel opens it correctly.
+`--format text|html|csv|json` (default text). `-o` writes to a file. `--show-all` adds full header fields. For CSV, `-d` / `--delimiter` sets the separator (default `,`; use `;` for Excel with Russian locale, `tab` for TSV-style).
 
-**Stats** — mapper counts (archives if libarchive is installed):
+### Stats
 
 ```bash
 ines_rom_stats.py /path/to/roms
 ines_rom_stats.py /path/to/roms --json
 ```
 
-**Split** — extract PRG/CHR (prompts before overwrite unless `--force`):
+### Split
 
 ```bash
 ines_split_rom.py game.nes
-ines_split_rom.py roms.7z
+ines_split_rom.py roms.7z          # prompts before overwrite; use --force to skip
 ```
 
 ## Library

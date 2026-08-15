@@ -10,7 +10,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Added
 
-- **`ines_scan_roms.py`:** structured export via `--format {text,html,csv,tsv,json}` and optional `-o` / `--output`. HTML is a self-contained table; CSV uses UTF-8 BOM for Excel; TSV and JSON share the same row schema (`path`, `archive_member`, plus `INESHeader.to_dict()` fields).
+- **`ines_scan_roms.py`:** export via `--format {text,html,csv,json}` and optional `-o`. `--show-all` selects the full header field set. CSV supports `-d` / `--delimiter` (e.g. `;` for Excel RU, `tab` for tab-separated) and uses UTF-8 BOM. Short output converts size fields to KiB (`// 1024`); `--show-all` keeps bytes.
+- **`INESHeader.to_dict()`:** dropped redundant `prg_rom_size_kib` / `chr_rom_size_kib` (derive with `// 1024` if needed).
 - **`ines_parser.mappers`:** names for previously unknown mapper IDs found in the wild (82, 111, 127, 170, 256, 260, 272, 355, 400, 405, 408, 446, 515, 517, 523, 526, 534, 538, 540, 544, 547, 548, 558, 559), from NESdev Wiki / MAME comments.
 
 ## [1.2.1] - 2026-05-03
