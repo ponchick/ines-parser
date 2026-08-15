@@ -11,6 +11,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 - **`ines_scan_roms.py`:** structured export via `--format {text,html,csv,tsv,json}` and optional `-o` / `--output`. HTML is a self-contained table; CSV uses UTF-8 BOM for Excel; TSV and JSON share the same row schema (`path`, `archive_member`, plus `INESHeader.to_dict()` fields).
+- **`ines_parser.mappers`:** names for previously unknown mapper IDs found in the wild (82, 111, 127, 170, 256, 260, 272, 355, 400, 405, 408, 446, 515, 517, 523, 526, 534, 538, 540, 544, 547, 548, 558, 559), from NESdev Wiki / MAME comments.
 
 ## [1.2.1] - 2026-05-03
 

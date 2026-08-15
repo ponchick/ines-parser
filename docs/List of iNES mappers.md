@@ -85,6 +85,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |79|NINA-03/NINA-06|It's either 003 or 006, we don't know right now|
 |80|Taito X1 005||
 |81|Nanjing / NTDEC N715021|81 Super Gun|
+|82|Taito X1-017|Old mis-ordered PRG dumps; see also mapper 552|
 |83|Cony Board||
 |85|VRC7|Contains expansion sound|
 |86|JALECO-JF-13||
@@ -105,6 +106,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |106|Bootleg SMB3||
 |107|Magicseries MD||
 |108|Unlicensed LH28 LH54|108 has 4 variant boards|
+|111|GTROM|Also historically used for Ninja Ryukenden Chinese MMC1 variant|
 |112|Nanjing / NTDEC Asder||
 |113|HES NTD-8|For multicarts including mapper 79 games|
 |114|Supergame Lionking||
@@ -118,6 +120,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |123|Unlicensed H2288||
 |125|Unlicensed LH32|Monty no Doki Doki Daidassou - FDS Conversion|
 |126|Multicart PJOY84||
+|127|Bootleg Double Dragon II|Japan pirate|
 |132|TXC 22211||
 |133|Sachen SA72008||
 |134|Multicart Family 4646||
@@ -152,6 +155,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |166|SUBOR||
 |167|SUBOR||
 |168|Unlicensed Racermate||
+|170|Fujiya|Shiko Game Syu|
 |171|Kaiser KS7058||
 |172|TXC Dumaracing||
 |173|TXC Mjblock||
@@ -231,8 +235,10 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |253|Hengg SHJY3||
 |254|Bootleg PIKACHUY2K||
 |255|Multicart 72IN1|duplicate of mapper 225|
+|256|OneBus, UNL-OneBus, BMC-OneBus|OneBus Famiclones|
 |258|Unlicensed 158B||
 |259|Multicart F15||
+|260|HP10xx/HP20xx|Multicarts; predecessor to FK23C|
 |261|Multicart 810544C||
 |262|Sachen Shero||
 |263|Unlicensed KOF97||
@@ -241,6 +247,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |266|Unlicensed Cityfight||
 |267|Multicart EL861121C||
 |268|SMD133 Board||
+|272|Bootleg Akumajo Special|Boku Dracula-kun bootleg|
 |274|Multicart 80013B||
 |283|RCM GS2004|and RCM_GS2013|
 |285|Multicart A65AS||
@@ -299,6 +306,7 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |352|Kaiser KS106C|4-in-1|
 |353|Multicart 810305C|Super Mario Family multicart|
 |354|Multicart FAM250||
+|355|Hwang Shinwei 3D-BLOCK|PIC16C54 protection|
 |356|Multicart JY208||
 |361|Multicart YY841101C||
 |362|Multicart 830506C||
@@ -318,8 +326,11 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |393|Multicart 820720C||
 |396|Multicart 850437C||
 |399|Batmap 000|homebrew game Star Versus|
+|400|retroUSB 8-bit XMAS 2017|Sealie/retroUSB homebrew multicart|
 |401|Multicart KC885||
 |404|Multicart JY012005||
+|405|UMC UM6578|NES-on-a-chip / PnP|
+|408|Konami PnP|Konami Collector's Series Advance Arcade|
 |409|Sealie Dpcmcart|A Winner is You homebrew music cart|
 |410|Multicart JY302||
 |411|Multicart A88S1||
@@ -334,26 +345,37 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |434|Multicart S009||
 |437|Multicart TH2348||
 |438|Multicart K3071||
+|446|Mindkids SMD172B_FPGA|Pixel Games / Retro-Bit multicarts|
 |447|Multicart KL06||
 |452|Multicart DS927||
 |512|Sachen Zgdh||
 |513|Sachen SA9602B||
+|515|Family Noraebang|Korean karaoke; YM2413 + mic|
 |516|Cocoma Board||
+|517|Kkachi-wa Nolae Chingu|Korean karaoke with mic|
 |519|Unlicensed EH8813A|Dr Mario II Chinese pirate|
 |520|Bootleg 2YUDB||
 |521|Dreamtech Board|Korean Igo|
 |522|Unlicensed LH10|Fuuun Shaolin Kyo FDS conversion|
+|523|Jncota Fengshenbang|Waixing FS005-like; hard-wired mirroring|
 |524|Bootleg 900218|Lord of King pirate|
 |525|Kaiser KS7021A|GetsuFumaDen pirate (and maybe a Contra?)|
+|526|Bootleg Sangokushi, UNL-BJ-56|Namco Sangokushi: Chugen no Hasha bootleg|
 |527|Unlicensed AX40G|Fudou Myouou Den pirate|
 |528|Multicart 831128C|1995 New Series Super 2-in-1|
 |529|Unlicensed T230|Datach Dragon Ball Z IV bootleg|
 |530|Unlicensed AX5705|Super Mario Bros Pocker Mali|
 |533|Sachen 3014|Dong Dong Nao II|
+|534|ING-022 / TEC9719|MMC3 multicart ASIC; related to mappers 126 and 422|
 |535|Unlicensed LH53|Nazo no Murasamejo FDS conversion|
+|538|Bootleg 60-1064-16L|Exciting Soccer / Super Soccer Champion FDS conversion|
 |539|Bootleg Palthena|Hikari Shinwa (Kid Icarus) FDS conversion|
+|540|Mapper 359 CHR 2K variant|2 KiB CHR banks for 512 KiB CHR-RAM|
 |541|Multicart LITTLECOM160||
 |543|Multicart Srpg 5IN1||
+|544|Waixing FS306|Bawang de Dalu / Sangokushi II translation|
+|547|Konami QTa, KONAMI-QTAI|VRC5-based QTa adapter|
+|548|Co Tung CTC-15|Almana no Kiseki FDS conversion|
 |549|Kaiser KS7016B|Meikyuu Jiin Dababa alt FDS conversion|
 |550|Multicart JY820845C||
 |551|Jncota KT1001||
@@ -362,6 +384,8 @@ The following table lists mapper numbers known to `ines_parser`, including many 
 |554|Kaiser KS7010|Akumajo Dracula FDS conversion|
 |555|NES-EVENT 2||
 |557|Unlicensed LG25|Moero TwinBee FDS conversion|
+|558|Yancheng YC-03-09|Related to mappers 162-164|
+|559|Unused|No documented assignment (MAME)|
 
 ---
 
