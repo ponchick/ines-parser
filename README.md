@@ -1,87 +1,53 @@
 # iNES Parser
 
-Lightweight Python library and CLI tools for working with NES ROMs in iNES/NES 2.0 format.
-
-Supported versions: Python 3.10-3.14.
-
-## Quick Start
+Python library and CLI for NES ROMs in iNES / NES 2.0 format. Requires Python 3.10+.
 
 ```bash
 pip install ines-parser
+# optional: .7z / .zip / .rar support
+pip install "ines-parser[archive]"
 ```
-
-Optional extra for archive formats (`.7z`/`.zip`/`.rar`): `pip install "ines-parser[archive]"`. Otherwise the library has no extra dependencies.
-
-## What It Does
-
-- parses ROM headers (`mapper`, PRG/CHR sizes, mirroring, and more)
-- scans ROM directories with filters
-- summarizes mapper usage across a folder (and archives when optional deps are installed)
-- splits ROM files into `PRG` and `CHR` binaries
 
 ## CLI
 
-Tools live in **`ines_parser/cli/`** as **`ines_scan_roms.py`**, **`ines_rom_stats.py`**, and **`ines_split_rom.py`**. The names match **`pip install`** entry points on your `PATH`.
-
-**Without installing**, from the repository root you can use either `-m` or the path to the same files:
-
-```bash
-python -m ines_parser.cli.ines_scan_roms /path/to/roms
-python ines_parser/cli/ines_scan_roms.py /path/to/roms
-
-python -m ines_parser.cli.ines_rom_stats /path/to/roms
-python ines_parser/cli/ines_rom_stats.py /path/to/roms
-
-python -m ines_parser.cli.ines_split_rom game.nes
-python ines_parser/cli/ines_split_rom.py game.nes
-```
-
-**After `pip install`,** run the same logical names as commands (they are small wrappers, not copies of the sources):
+After install, three tools are on your `PATH`. From a checkout you can also run them as modules or scripts:
 
 ```bash
 ines_scan_roms.py /path/to/roms
-ines_rom_stats.py /path/to/roms
-ines_split_rom.py game.nes
+# or: python -m ines_parser.cli.ines_scan_roms /path/to/roms
+# or: python ines_parser/cli/ines_scan_roms.py /path/to/roms
 ```
 
-### Scan ROMs
+Same pattern for `ines_rom_stats.py` and `ines_split_rom.py`.
+
+**Scan** — list headers, filter, optionally export:
 
 ```bash
 ines_scan_roms.py /path/to/roms
-ines_scan_roms.py /path/a /path/b
-ines_scan_roms.py /path/to/roms --mapper 4
-ines_scan_roms.py /path/to/roms --show-all
+ines_scan_roms.py /a /b --mapper 4 --show-all
+ines_scan_roms.py /path/to/roms --format csv -o roms.csv
+ines_scan_roms.py /path/to/roms --format html -o report.html
 ```
 
-Useful filters:
+Filters: `--mapper`, `--mirroring H|V|F`, `--has-trainer`, `--min-prg` / `--max-prg`, `--min-chr` / `--max-chr` (sizes in KiB).
 
-- `--mapper N`
-- `--mirroring H|V|F`
-- `--has-trainer`
-- `--min-prg KiB`, `--max-prg KiB`
-- `--min-chr KiB`, `--max-chr KiB`
+`--format` is `text` (default), `html`, `csv`, `tsv`, or `json`. Use `-o` to write a file. CSV is UTF-8 with a BOM so Excel opens it correctly.
 
-### ROM statistics
-
-Counts valid headers per **mapper** (recursive scan; archives included when `libarchive` is available).
+**Stats** — mapper counts (archives if libarchive is installed):
 
 ```bash
 ines_rom_stats.py /path/to/roms
-ines_rom_stats.py rom/a rom/b --sort mapper
 ines_rom_stats.py /path/to/roms --json
 ```
 
-### Split ROM (PRG / CHR)
+**Split** — extract PRG/CHR (prompts before overwrite unless `--force`):
 
 ```bash
 ines_split_rom.py game.nes
 ines_split_rom.py roms.7z
-ines_split_rom.py game.nes --force
 ```
 
-By default, existing output files are not overwritten without confirmation.
-
-## Library Usage
+## Library
 
 ```python
 from ines_parser import parse_ines_header
@@ -90,16 +56,16 @@ with open("game.nes", "rb") as f:
     header = parse_ines_header(f.read(16))
 
 if header and header.is_valid():
-    print(header)  # compact output
-    print(header.detailed_str())  # full output
+    print(header)
+    print(header.detailed_str())
 ```
 
-## Format Docs
+## Docs
 
-- Details: `docs/iNES.md`
-- Spec: [NESdev iNES](https://www.nesdev.org/wiki/INES)
-- NES 2.0: [NESdev NES 2.0](https://www.nesdev.org/wiki/NES_2.0)
+- `docs/iNES.md`
+- [NESdev iNES](https://www.nesdev.org/wiki/INES)
+- [NESdev NES 2.0](https://www.nesdev.org/wiki/NES_2.0)
 
 ## License
 
-MIT, see `LICENSE`.
+MIT — see `LICENSE`.

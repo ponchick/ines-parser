@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`ines_scan_roms.py`:** structured export via `--format {text,html,csv,tsv,json}` and optional `-o` / `--output`. HTML is a self-contained table; CSV uses UTF-8 BOM for Excel; TSV and JSON share the same row schema (`path`, `archive_member`, plus `INESHeader.to_dict()` fields).
+
 ## [1.2.1] - 2026-05-03
 
 ### Changed
