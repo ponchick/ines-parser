@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ines-parser"
-version = "1.5.0"
+version = "1.5.1"
 description = "Parse iNES/NES 2.0 ROM headers and ROM filename tags; CLI to scan, export, summarize, analyze, and split ROMs"
 readme = "README.md"
 license = "MIT"

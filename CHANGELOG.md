@@ -8,6 +8,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-10-26
+
+### Fixed
+
+- **`ines_analyze_rom.py`:** executable bit restored, matching the other CLI tools. Matters only when running the script directly from a checkout or a GitHub source archive (`./ines_parser/cli/ines_analyze_rom.py`); pip installs are unaffected (wheel entry points generate their own executable scripts).
+
 ## [1.5.0] - 2026-10-26
 
 ### Added
