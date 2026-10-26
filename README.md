@@ -1,6 +1,6 @@
 # iNES Parser
 
-Python library and CLI for NES ROMs in iNES / NES 2.0 format: parse headers, scan collections, export reports, summarize mappers, and split PRG/CHR. Requires Python 3.10+.
+Python library and CLI for NES ROMs in iNES / NES 2.0 format: parse headers and ROM filename tags, scan collections, export reports, summarize mappers, analyze single ROMs, and split PRG/CHR. Requires Python 3.10+.
 
 ```bash
 pip install ines-parser
@@ -16,7 +16,7 @@ ines_scan_roms.py /path/to/roms
 # or: python -m ines_parser.cli.ines_scan_roms /path/to/roms
 ```
 
-Same idea for `ines_rom_stats.py` and `ines_split_rom.py`.
+Same idea for `ines_rom_stats.py`, `ines_split_rom.py`, and `ines_analyze_rom.py`.
 
 ### Scan
 
@@ -46,10 +46,19 @@ ines_split_rom.py game.nes
 ines_split_rom.py roms.7z          # prompts before overwrite; use --force to skip
 ```
 
+### Analyze
+
+```bash
+ines_analyze_rom.py game.nes
+ines_analyze_rom.py game.nes --json
+```
+
+Full report for one ROM file: file size, iNES header, and naming-convention tags parsed from the filename — GoodTools style (`(JU) [!] [b] [hIR] [T+Rus] (VS) (PC10)`) and No-Intro style (`(USA) (Rev A) (Beta 1) (En,Fr,De)`) — plus cross-checks between them: file size vs. header, filename region vs. TV system, `(VS)`/`(PC10)` vs. console type, `[!]` vs. header validity. Unrecognised tags are listed as unknown, never guessed.
+
 ## Library
 
 ```python
-from ines_parser import parse_ines_header
+from ines_parser import parse_ines_header, parse_rom_filename
 
 with open("game.nes", "rb") as f:
     header = parse_ines_header(f.read(16))
@@ -57,6 +66,12 @@ with open("game.nes", "rb") as f:
 if header and header.is_valid():
     print(header)
     print(header.detailed_str())
+
+info = parse_rom_filename("Super Mario Bros. (JU) [!].nes")
+print(info.title)        # Super Mario Bros.
+print(info.regions)      # ('Japan', 'USA')
+print(info.verified)     # True
+print(info.to_dict())    # JSON-friendly; adds expected_tv_system
 ```
 
 ## Docs

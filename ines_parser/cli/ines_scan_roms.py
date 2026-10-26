@@ -32,7 +32,6 @@ from ines_parser import parse_ines_header, INESHeader, INES_HEADER_SIZE
 from ines_parser.cli.rom_fs import (
     ALL_ARCHIVE_FORMATS,
     ARCHIVE_EXTENSIONS,
-    LIBARCHIVE_AVAILABLE,
     DEFAULT_ARCHIVE_PATH,
     SUPPORTED_EXTENSIONS,
     collect_supported_files,
@@ -40,7 +39,8 @@ from ines_parser.cli.rom_fs import (
 )
 
 # Path columns always first, then header fields for the selected detail level.
-_PATH_COLUMNS = ("path", "archive_member")
+# Annotated as tuple[str, ...] so column lists built from it stay list[str].
+_PATH_COLUMNS: tuple[str, ...] = ("path", "archive_member")
 
 # Default (short) list. Size fields use the same names as full, but values are KiB.
 _BASIC_COLUMNS = (
@@ -535,7 +535,7 @@ def process_archive(
     Returns:
         Number of successfully processed files in the archive
     """
-    if not LIBARCHIVE_AVAILABLE:
+    if libarchive is None:
         return 0
 
     relative_path = archive_path.relative_to(base_path)
@@ -715,7 +715,7 @@ def scan_directory(
 def build_argument_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser."""
     supported_types = ", ".join(sorted(SUPPORTED_EXTENSIONS))
-    if not LIBARCHIVE_AVAILABLE:
+    if libarchive is None:
         supported_types += " (libarchive not available - archive support disabled)"
 
     parser = argparse.ArgumentParser(
@@ -891,7 +891,7 @@ def main() -> int:
         for root in scan_roots:
             print(f"  {root}", file=sys.stderr)
         print(f"Looking for: {extensions_str}", file=sys.stderr)
-        if not LIBARCHIVE_AVAILABLE:
+        if libarchive is None:
             archive_types = ", ".join(sorted(ALL_ARCHIVE_FORMATS))
             print(
                 f"Warning: libarchive not available - archive support "

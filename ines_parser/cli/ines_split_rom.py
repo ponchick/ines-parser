@@ -19,9 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 # Try to import libarchive - make it optional
 try:
     import libarchive
-    LIBARCHIVE_AVAILABLE = True
 except ImportError:
-    LIBARCHIVE_AVAILABLE = False
+    libarchive = None  # type: ignore
 
 # Import from ines_parser package
 from ines_parser import parse_ines_header, INES_HEADER_SIZE, INES_TRAINER_SIZE
@@ -29,7 +28,7 @@ from ines_parser import parse_ines_header, INES_HEADER_SIZE, INES_TRAINER_SIZE
 # Constants
 SUPPORTED_EXTENSIONS = {'.nes'}
 ALL_ARCHIVE_EXTENSIONS = {'.7z', '.zip', '.rar'}
-ARCHIVE_EXTENSIONS = ALL_ARCHIVE_EXTENSIONS if LIBARCHIVE_AVAILABLE else set()
+ARCHIVE_EXTENSIONS = ALL_ARCHIVE_EXTENSIONS if libarchive is not None else set()
 
 
 class ROMExtractionError(Exception):
@@ -204,9 +203,9 @@ def process_archive(filename: str, force: bool = False) -> None:
     Raises:
         ROMExtractionError: If processing fails or libarchive not available
     """
-    if not LIBARCHIVE_AVAILABLE:
+    if libarchive is None:
         raise ROMExtractionError("libarchive not available - archive support disabled")
-    
+
     with open(filename, 'rb') as f:
         with libarchive.fd_reader(f.fileno()) as archive:
             # First pass: collect all .nes files
@@ -264,7 +263,7 @@ def parse_arguments() -> argparse.Namespace:
     # Build supported formats string from constants
     all_extensions = SUPPORTED_EXTENSIONS | ARCHIVE_EXTENSIONS
     supported_formats = ", ".join(sorted(all_extensions))
-    if not LIBARCHIVE_AVAILABLE:
+    if libarchive is None:
         supported_formats += " (libarchive not available - archive support disabled)"
     
     parser = argparse.ArgumentParser(
@@ -314,7 +313,7 @@ def main() -> int:
         file_ext = input_path.suffix.lower()
         
         if file_ext in ALL_ARCHIVE_EXTENSIONS:
-            if not LIBARCHIVE_AVAILABLE:
+            if libarchive is None:
                 print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
                 print("For archive format support, install libarchive-c: pip install libarchive-c", file=sys.stderr)
                 return 1

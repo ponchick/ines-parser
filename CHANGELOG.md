@@ -8,6 +8,22 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-26
+
+### Added
+
+- **`ines_parser.filename`:** ROM filename conventions parser — `parse_rom_filename()` extracts region, dump status (`[!]`, `[b]`, `[a]`, `[o]`, `[t]`, `[x]`, `[c]`, `[f]`), hacks (`[h...]`), translations (`[T+Rus]`, `[T-Eng]`), revisions/versions, prereleases and console markers from GoodTools (`(JU) [!]`, `(VS)`, `(PC10)`, `(Unl)`, `(PD)`, `(M#)`) and No-Intro (`(USA)`, `(Europe) (En,Fr,De)`, `(Rev A)`, `(Beta 1)`) style names. Unrecognised tags are preserved in `unknown_tokens` verbatim. `expected_tv_system()` maps regions to NTSC/PAL; `RomFilenameInfo.to_dict()` provides a JSON-friendly view.
+- **`ines_analyze_rom.py`:** full analysis of a single ROM — file size, iNES header, filename tags, and cross-checks between them: file size vs. header sizes, filename region vs. TV system, `(VS)`/`(PC10)` vs. console type, `[!]` vs. header validity. Optional `--json` (`schema_version: 1`).
+- **Tests:** `tests/test_filename.py` covers the filename parser (GoodTools, No-Intro, unknown tokens, titles/extensions, TV expectations).
+
+### Fixed
+
+- Type-checker (pyright/Pylance) errors across the package: header narrowing in `ines_analyze_rom.py`, dump-flag parsing in `filename.py`, `_PATH_COLUMNS` literal typing in `ines_scan_roms.py`, and optional-import handling of `libarchive` in the CLI tools.
+
+### Changed
+
+- **CLI internals:** dropped the redundant `LIBARCHIVE_AVAILABLE` flag (it duplicated `libarchive is not None`, the single source of truth after `import libarchive` falls back to `libarchive = None`). All guards in `ines_scan_roms.py`, `ines_rom_stats.py`, `ines_split_rom.py`, and `rom_fs.py` now check `libarchive is None` directly; runtime behavior is unchanged.
+
 ## [1.4.0] - 2026-08-15
 
 ### Added

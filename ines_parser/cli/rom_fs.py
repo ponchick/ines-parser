@@ -7,16 +7,15 @@ from typing import Optional
 
 try:
     import libarchive  # noqa: F401
-    LIBARCHIVE_AVAILABLE = True
 except ImportError:
-    LIBARCHIVE_AVAILABLE = False
+    libarchive = None  # type: ignore
 
 from ines_parser import INES_HEADER_SIZE
 
 DEFAULT_ARCHIVE_PATH = "nes_archive/"
 ALL_ARCHIVE_FORMATS = frozenset({".7z", ".zip", ".rar"})
 ARCHIVE_EXTENSIONS: frozenset[str] = (
-    ALL_ARCHIVE_FORMATS if LIBARCHIVE_AVAILABLE else frozenset()
+    ALL_ARCHIVE_FORMATS if libarchive is not None else frozenset()
 )
 SUPPORTED_EXTENSIONS = ARCHIVE_EXTENSIONS | {".nes"}
 

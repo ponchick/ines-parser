@@ -2,7 +2,8 @@
 iNES Parser Library
 
 A Python library for parsing iNES format NES ROM files.
-Supports iNES 1.0, NES 2.0, Archaic iNES formats, and UNIF detection.
+Supports iNES 1.0, NES 2.0, Archaic iNES formats, and UNIF detection,
+plus GoodTools/No-Intro ROM filename conventions.
 """
 
 from .parser import (
@@ -15,6 +16,13 @@ from .parser import (
     CPUTiming,
     INES_HEADER_SIZE,
     INES_TRAINER_SIZE,
+)
+
+from .filename import (
+    parse_rom_filename,
+    RomFilenameInfo,
+    DumpStatus,
+    expected_tv_system,
 )
 
 from .tables import (
@@ -31,7 +39,7 @@ from .tables import (
     is_known_submapper,
 )
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 __author__ = "Leonid Kabanov"
 __all__ = [
     "parse_ines_header",
@@ -43,6 +51,10 @@ __all__ = [
     "CPUTiming",
     "INES_HEADER_SIZE",
     "INES_TRAINER_SIZE",
+    "parse_rom_filename",
+    "RomFilenameInfo",
+    "DumpStatus",
+    "expected_tv_system",
     "get_mapper_name",
     "get_mapper_alternate_names",
     "get_mapper_notes",

@@ -28,7 +28,6 @@ from ines_parser.tables import get_mapper_name
 from ines_parser.cli.rom_fs import (
     ALL_ARCHIVE_FORMATS,
     ARCHIVE_EXTENSIONS,
-    LIBARCHIVE_AVAILABLE,
     DEFAULT_ARCHIVE_PATH,
     SUPPORTED_EXTENSIONS,
     collect_supported_files,
@@ -73,7 +72,7 @@ def tally_nes_file(file_path: Path, stats: RomStats) -> None:
 
 
 def tally_archive(archive_path: Path, stats: RomStats) -> None:
-    if not LIBARCHIVE_AVAILABLE or libarchive is None:
+    if libarchive is None:
         return
     try:
         with open(archive_path, "rb") as f:
@@ -163,7 +162,7 @@ def print_text_report(report: dict[str, Any]) -> None:
 
 def build_argument_parser() -> argparse.ArgumentParser:
     supported = ", ".join(sorted(SUPPORTED_EXTENSIONS))
-    if not LIBARCHIVE_AVAILABLE:
+    if libarchive is None:
         supported += " (libarchive not installed — archive members not scanned)"
 
     parser = argparse.ArgumentParser(
@@ -226,7 +225,7 @@ def main() -> int:
         for r in scan_roots:
             print(f"  {r}", file=sys.stderr)
         print(f"Extensions: {', '.join(sorted(SUPPORTED_EXTENSIONS))}", file=sys.stderr)
-        if not LIBARCHIVE_AVAILABLE:
+        if libarchive is None:
             print(
                 f"Note: without libarchive, archives {sorted(ALL_ARCHIVE_FORMATS)} are ignored.",
                 file=sys.stderr,
