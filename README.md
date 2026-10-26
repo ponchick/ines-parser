@@ -50,10 +50,11 @@ ines_split_rom.py roms.7z          # prompts before overwrite; use --force to sk
 
 ```bash
 ines_analyze_rom.py game.nes
+ines_analyze_rom.py game.7z            # GoodTools-style one-ROM archive (needs libarchive-c)
 ines_analyze_rom.py game.nes --json
 ```
 
-Full report for one ROM file: file size, iNES header, and naming-convention tags parsed from the filename — GoodTools style (`(JU) [!] [b] [hIR] [T+Rus] (VS) (PC10)`) and No-Intro style (`(USA) (Rev A) (Beta 1) (En,Fr,De)`) — plus cross-checks between them: file size vs. header, filename region vs. TV system, `(VS)`/`(PC10)` vs. console type, `[!]` vs. header validity. Unrecognised tags are listed as unknown, never guessed.
+Full report for one ROM file: file size, iNES header, and naming-convention tags parsed from the filename — GoodTools style (`(JU) [!] [b] [hIR] [T+Rus] (VS) (PC10)`) and No-Intro style (`(USA) (Rev A) (Beta 1) (En,Fr,De)`) — plus cross-checks between them: file size vs. header, filename region vs. TV system, `(VS)`/`(PC10)` vs. console type, `[!]` vs. header validity. For archives, tags come from the inner `.nes` name and sizes refer to the uncompressed ROM. Unrecognised tags are listed as unknown, never guessed.
 
 ## Library
 

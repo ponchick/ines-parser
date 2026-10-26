@@ -10,6 +10,14 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [1.5.1] - 2026-10-26
 
+### Added
+
+- **`ines_analyze_rom.py`:** archives are now accepted (`ROM.7z`/`.zip`/`.rar`, GoodTools-style one-ROM archives, requires libarchive-c). Filename tags are read from the inner `.nes` name and size cross-checks use the uncompressed ROM size; the report shows the archive member (and notes when several `.nes` members exist).
+
+### Changed
+
+- **`ines_analyze_rom.py`:** the iNES header section of the text report is now one line per field with aligned labels (like the filename section) instead of a single `detailed_str()` line; default facts (no battery, no trainer, submapper 0) are omitted and mirroring is spelled out (`Horizontal` / `Vertical` / `Four-screen` instead of `H`/`V`/`F`).
+
 ### Fixed
 
 - **`ines_analyze_rom.py`:** executable bit restored, matching the other CLI tools. Matters only when running the script directly from a checkout or a GitHub source archive (`./ines_parser/cli/ines_analyze_rom.py`); pip installs are unaffected (wheel entry points generate their own executable scripts).
