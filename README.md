@@ -44,7 +44,11 @@ ines_rom_stats.py /path/to/roms --json
 ```bash
 ines_split_rom.py game.nes
 ines_split_rom.py roms.7z          # prompts before overwrite; use --force to skip
+ines_split_rom.py game.nes --pad-chr 64     # clone CHR to fill a 27C512 EPROM
+ines_split_rom.py game.nes --pad-prg 128 --pad-chr 64
 ```
+
+`--pad-prg` / `--pad-chr` clone the image across the whole target size in KiB: for burning a larger EPROM the data then reads the same whatever the upper address lines return. The target must be an integer multiple of the image size; nothing is ever truncated.
 
 ### Analyze
 

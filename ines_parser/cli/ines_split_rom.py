@@ -3,7 +3,8 @@
 Split iNES ROM files into PRG and CHR components.
 
 This script extracts PRG ROM and CHR ROM from iNES format files,
-supporting both plain .nes files and .7z archives.
+supporting both plain .nes files and .7z archives. Outputs can be cloned
+up to a target size (e.g. an EPROM like 27C512) with --pad-prg / --pad-chr.
 """
 
 import argparse
@@ -11,7 +12,7 @@ import io
 import os
 import sys
 from pathlib import Path
-from typing import BinaryIO, Tuple
+from typing import BinaryIO, Optional, Tuple
 
 # Repo root on path when running this file directly (not via pip console_scripts)
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -34,6 +35,36 @@ ARCHIVE_EXTENSIONS = ALL_ARCHIVE_EXTENSIONS if libarchive is not None else set()
 class ROMExtractionError(Exception):
     """Exception raised when ROM extraction fails."""
     pass
+
+
+def mirror_to(data: bytes, target_size: int, label: str) -> bytes:
+    """
+    Repeat ``data`` until it fills ``target_size``.
+
+    Useful when burning onto a larger EPROM: with the image cloned across the
+    whole chip, the data is the same whatever the upper address lines read.
+    The target must be an integer multiple of the image size (or equal to it).
+    """
+    if target_size < len(data):
+        raise ROMExtractionError(
+            f"{label} is {len(data)} bytes; cannot pad down to {target_size}"
+        )
+    if target_size == len(data):
+        return data
+    if target_size % len(data) != 0:
+        raise ROMExtractionError(
+            f"{label} is {len(data)} bytes; {target_size} is not an integer multiple, "
+            "cannot mirror evenly"
+        )
+    return data * (target_size // len(data))
+
+
+def apply_padding(data: bytes, target_kib: int, label: str) -> Tuple[bytes, str]:
+    """Clone ``data`` up to ``target_kib``; returns (data, output note)."""
+    result = mirror_to(data, target_kib * 1024, label)
+    if len(result) == len(data):
+        return result, ""
+    return result, f", mirrored to {len(result)}"
 
 
 def generate_output_filenames(input_filename: str) -> Tuple[str, str]:
@@ -113,15 +144,23 @@ def check_overwrite_permission(prg_fname: str, chr_fname: str, force: bool,
     return response in ('y', 'yes')
 
 
-def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) -> None:
+def extract_rom_data(
+    file_name: str,
+    nes_file: BinaryIO,
+    force: bool = False,
+    pad_prg_kib: Optional[int] = None,
+    pad_chr_kib: Optional[int] = None,
+) -> None:
     """
     Extract PRG and CHR ROM data from an iNES file.
-    
+
     Args:
         file_name: Name of the ROM file (for output naming)
         nes_file: File-like object containing the ROM data
         force: If True, overwrite existing files without confirmation
-        
+        pad_prg_kib: Clone the PRG output up to this size in KiB (None keeps it as-is)
+        pad_chr_kib: Clone the CHR output up to this size in KiB (None keeps it as-is)
+
     Raises:
         ROMExtractionError: If extraction fails or overwrite denied
     """
@@ -161,10 +200,15 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) ->
             raise ROMExtractionError(
                 f"EOF reached while reading PRG part: expected {header.prg_rom_size} bytes, got {len(prg_data)}"
             )
+        prg_note = ""
+        if pad_prg_kib is not None:
+            prg_data, prg_note = apply_padding(prg_data, pad_prg_kib, "PRG ROM")
         with open(prg_fname, 'wb') as prg:
             prg.write(prg_data)
-        print(f"Extracted PRG ROM: {prg_fname} ({header.prg_rom_size} bytes)")
-    
+        print(f"Extracted PRG ROM: {prg_fname} ({header.prg_rom_size} bytes{prg_note})")
+    elif pad_prg_kib is not None:
+        raise ROMExtractionError("--pad-prg given, but this ROM has no PRG ROM")
+
     # Extract CHR ROM
     if header.chr_rom_size > 0:
         chr_data = nes_file.read(header.chr_rom_size)
@@ -172,9 +216,14 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) ->
             raise ROMExtractionError(
                 f"EOF reached while reading CHR part: expected {header.chr_rom_size} bytes, got {len(chr_data)}"
             )
+        chr_note = ""
+        if pad_chr_kib is not None:
+            chr_data, chr_note = apply_padding(chr_data, pad_chr_kib, "CHR ROM")
         with open(chr_fname, 'wb') as chr_file:
             chr_file.write(chr_data)
-        print(f"Extracted CHR ROM: {chr_fname} ({header.chr_rom_size} bytes)")
+        print(f"Extracted CHR ROM: {chr_fname} ({header.chr_rom_size} bytes{chr_note})")
+    elif pad_chr_kib is not None:
+        raise ROMExtractionError("--pad-chr given, but this ROM has no CHR ROM (CHR-RAM game?)")
     
     # Verify we've read at least the expected amount of data.
     # Extra trailing data is allowed, but we report it for visibility.
@@ -192,14 +241,21 @@ def extract_rom_data(file_name: str, nes_file: BinaryIO, force: bool = False) ->
         )
 
 
-def process_archive(filename: str, force: bool = False) -> None:
+def process_archive(
+    filename: str,
+    force: bool = False,
+    pad_prg_kib: Optional[int] = None,
+    pad_chr_kib: Optional[int] = None,
+) -> None:
     """
     Process an archive (.7z, .zip, or .rar) and extract the first .nes ROM file.
-    
+
     Args:
         filename: Path to the archive
         force: If True, overwrite existing files without confirmation
-        
+        pad_prg_kib: Clone the PRG output up to this size in KiB (None keeps it as-is)
+        pad_chr_kib: Clone the CHR output up to this size in KiB (None keeps it as-is)
+
     Raises:
         ROMExtractionError: If processing fails or libarchive not available
     """
@@ -242,20 +298,27 @@ def process_archive(filename: str, force: bool = False) -> None:
                         
                         # Create BytesIO object and extract
                         bio = io.BytesIO(data)
-                        extract_rom_data(entry.name, bio, force)
+                        extract_rom_data(entry.name, bio, force, pad_prg_kib, pad_chr_kib)
                         return
 
 
-def process_nes_file(filename: str, force: bool = False) -> None:
+def process_nes_file(
+    filename: str,
+    force: bool = False,
+    pad_prg_kib: Optional[int] = None,
+    pad_chr_kib: Optional[int] = None,
+) -> None:
     """
     Process a plain .nes file.
-    
+
     Args:
         filename: Path to the .nes file
         force: If True, overwrite existing files without confirmation
+        pad_prg_kib: Clone the PRG output up to this size in KiB (None keeps it as-is)
+        pad_chr_kib: Clone the CHR output up to this size in KiB (None keeps it as-is)
     """
     with open(filename, "rb") as nes_file:
-        extract_rom_data(filename, nes_file, force)
+        extract_rom_data(filename, nes_file, force, pad_prg_kib, pad_chr_kib)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -280,6 +343,24 @@ def parse_arguments() -> argparse.Namespace:
         '-f',
         action='store_true',
         help='Overwrite existing output files without confirmation'
+    )
+    parser.add_argument(
+        '--pad-prg',
+        type=int,
+        metavar='KIB',
+        help=(
+            'Clone the PRG image up to this size in KiB (e.g. 64 for a 27C512 EPROM); '
+            'the target must be an integer multiple of the image size, never truncates'
+        )
+    )
+    parser.add_argument(
+        '--pad-chr',
+        type=int,
+        metavar='KIB',
+        help=(
+            'Clone the CHR image up to this size in KiB (e.g. 64 for a 27C512 EPROM); '
+            'the target must be an integer multiple of the image size, never truncates'
+        )
     )
     return parser.parse_args()
 
@@ -317,9 +398,19 @@ def main() -> int:
                 print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
                 print("For archive format support, install libarchive-c: pip install libarchive-c", file=sys.stderr)
                 return 1
-            process_archive(args.filename, force=args.force)
+            process_archive(
+                args.filename,
+                force=args.force,
+                pad_prg_kib=args.pad_prg,
+                pad_chr_kib=args.pad_chr,
+            )
         elif file_ext == '.nes':
-            process_nes_file(args.filename, force=args.force)
+            process_nes_file(
+                args.filename,
+                force=args.force,
+                pad_prg_kib=args.pad_prg,
+                pad_chr_kib=args.pad_chr,
+            )
         else:
             print(f"Error: Unsupported file extension: {file_ext}", file=sys.stderr)
             all_extensions = SUPPORTED_EXTENSIONS | ARCHIVE_EXTENSIONS

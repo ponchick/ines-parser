@@ -12,6 +12,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Added
 
+- **`ines_split_rom.py`:** `--pad-prg KIB` / `--pad-chr KIB` clone the extracted image across a larger target (e.g. 64 for a 27C512 EPROM), so the data reads the same whatever the upper address lines return. The target must be an integer multiple of the image size; nothing is ever truncated, and asking to pad a ROM part that does not exist is an error.
 - **`ines_analyze_rom.py`:** archives are now accepted (`ROM.7z`/`.zip`/`.rar`, GoodTools-style one-ROM archives, requires libarchive-c). Filename tags are read from the inner `.nes` name and size cross-checks use the uncompressed ROM size; the report shows the archive member (and notes when several `.nes` members exist).
 
 ### Changed
