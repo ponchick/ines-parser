@@ -8,6 +8,21 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-22
+
+### Added
+
+- **`INESHeader.nametable_bit0`:** raw value of flags-6 bit 0 (hard-wired nametable arrangement). It is normally implied by `mirroring`, but mappers like 30/218 combine it with the four-screen bit (`%....1..0` = one-screen, `%....1..1` = four-screen), so real-world headers with flags 6 = `0xEB`/`0xA9` need it for faithful reporting. Exposed in `to_dict()` (`nametable_bit0`), `detailed_str()` (shown for four-screen headers), and `ines_scan_roms.py --show-all` (`Nametable Bit 0` column); `ines_analyze_rom.py` prints it for four-screen ROMs.
+- **Tests:** `tests/test_parser.py` covers header field parsing (nametable bit 0, classic mappers, NES 2.0 mapper/submapper, parse-failure handling).
+
+### Removed
+
+- **`INESHeader.to_dict()`:** the deprecated `prg_rom_size_kib` / `chr_rom_size_kib` keys (deprecated in 1.5.0) are removed as planned; use `prg_rom_size // 1024` and `chr_rom_size // 1024`. Nothing else changed: the CLI tools and every documented library function keep the 1.x behavior, so `ines-parser>=1.2` consumers are unaffected.
+
+### Changed
+
+- README points to the new companion project [`ines-file`](https://github.com/ponchick/ines-file), which adds reading **and writing** of complete `.nes` files: assembling ROMs from PRG/CHR parts, patching header fields, and serializing headers with byte-exact round trips.
+
 ## [1.5.1] - 2026-10-26
 
 ### Added

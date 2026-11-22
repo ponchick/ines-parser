@@ -39,7 +39,7 @@ from .tables import (
     is_known_submapper,
 )
 
-__version__ = "1.5.1"
+__version__ = "2.0.0"
 __author__ = "Leonid Kabanov"
 __all__ = [
     "parse_ines_header",

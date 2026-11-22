@@ -362,6 +362,7 @@ def header_lines(header: dict[str, Any]) -> list[tuple[str, str]]:
         add("Battery", "yes")
     if header.get("four_screen"):
         add("Four-screen", "yes")
+        add("Nametable bit 0", "yes" if header.get("nametable_bit0") else "no")
     if header.get("is_vs_unisystem"):
         add("Vs. Unisystem", "yes")
     if header.get("is_playchoice_10"):

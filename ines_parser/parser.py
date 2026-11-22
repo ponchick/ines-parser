@@ -92,6 +92,10 @@ class INESHeader:
         self.has_battery = bool(flags6 & 0x02)
         self.has_trainer = bool(flags6 & 0x04)
         self.four_screen = bool(flags6 & 0x08)
+        # Raw value of flags-6 bit 0 (hard-wired nametable arrangement). It is
+        # normally implied by `mirroring`, but mappers like 30 and 218 combine
+        # it with the four-screen bit, so it is exposed separately.
+        self.nametable_bit0 = bool(flags6 & 0x01)
         mapper_low = (flags6 & 0xF0) >> 4
         
         # Parse Flags 7
@@ -337,28 +341,20 @@ class INESHeader:
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert header to dictionary for easy access.
-
-        ``prg_rom_size_kib`` and ``chr_rom_size_kib`` are deprecated; prefer
-        ``prg_rom_size // 1024`` and ``chr_rom_size // 1024``. They remain in
-        1.x for compatibility and are planned for removal in 2.0.
         """
         if not self.is_valid():
             return {
                 'format': self.format.value,
                 'valid': False
             }
-        
+
         mapper_info = self.get_mapper_info()
-        
+
         result = {
             'format': self.format.value,
             'valid': True,
             'prg_rom_size': self.prg_rom_size,
             'chr_rom_size': self.chr_rom_size,
-            # Deprecated: use prg_rom_size // 1024 and chr_rom_size // 1024.
-            # Kept for 1.x compatibility; planned removal in 2.0.
-            'prg_rom_size_kib': self.prg_rom_size // 1024,
-            'chr_rom_size_kib': self.chr_rom_size // 1024,
             'mapper': self.mapper,
             'mapper_name': mapper_info['name'],
             'mapper_alternates': mapper_info['alternates'],
@@ -367,6 +363,7 @@ class INESHeader:
             'has_battery': self.has_battery,
             'has_trainer': self.has_trainer,
             'four_screen': self.four_screen,
+            'nametable_bit0': self.nametable_bit0,
             'is_vs_unisystem': self.is_vs_unisystem,
             'is_playchoice_10': self.is_playchoice_10,
             'console_type': self.console_type.value,
@@ -488,6 +485,8 @@ class INESHeader:
             parts.append("Trainer: Yes")
         if self.has_battery:
             parts.append("Battery: Yes")
+        if self.four_screen:
+            parts.append(f"Nametable bit 0: {self.nametable_bit0}")
         if self.is_vs_unisystem:
             parts.append("VS Unisystem")
         if self.is_playchoice_10:

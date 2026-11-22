@@ -2,6 +2,8 @@
 
 Python library and CLI for NES ROMs in iNES / NES 2.0 format: parse headers and ROM filename tags, scan collections, export reports, summarize mappers, analyze single ROMs, and split PRG/CHR. Requires Python 3.10+.
 
+For reading **and writing** complete `.nes` files (assembling ROMs from PRG/CHR parts, patching header fields, serializing headers) see the companion project [`ines-file`](https://github.com/ponchick/ines-file).
+
 ```bash
 pip install ines-parser
 pip install "ines-parser[archive]"   # optional: .7z / .zip / .rar
